@@ -73,30 +73,37 @@ class Sudoku_main_work:
                 else:
                     break
                 itert +=1
-            self.list_table = []
-            for k in range(1, 10):
-                sub_list_table = []
-                for l in range(1, 10):
-                    if str(type(self.sudoku_table[str(l+((k-1)*9))]))=="<class 'list'>":
-                        print(self.sudoku_table[str(l+((k-1)*9))], "list")
-                        sub_list_table.append(0)
-                    elif str(type(self.sudoku_table[str(l+((k-1)*9))]))=="<class 'int'>":
-                        print(self.sudoku_table[str(l+((k-1)*9))], "int")
-                        sub_list_table.append(self.sudoku_table[str(l+(k-1)*9)])
-                self.list_table.append(sub_list_table)
-            self.list_table = self.basic_backtracking(self.list_table)
-            self.sudoku_table = {}
-            for k in range(1, 10):
-                for l in range(1, 10):
-                    self.sudoku_table[f"{l+(k-1)*9}"] = self.list_table[k-1][l-1]
-            for k in self.sudoku_table:
-                if len(list(set(self.list_of_hints) & set([k]))) == 0:
-                    temp_label = Label(tk, text = f"{self.sudoku_table[k]}", bg = "white", fg = "black", font=("Calibri", 30))
-                    temp_label.place(x = 8 +(int(k) -1 -((int(k)-1)//9)*9)*55, y =  8 +((int(k)-1)//9)*55, width = 44, height = 44 )
-                    try:
-                        self.enter_numbers[int(k)-1].place_forget()
-                    except:
-                        pass
+            if self.table_is_completed != "won't ever":
+                self.list_table = []
+                for k in range(1, 10):
+                    sub_list_table = []
+                    for l in range(1, 10):
+                        if str(type(self.sudoku_table[str(l+((k-1)*9))]))=="<class 'list'>":
+                            print(self.sudoku_table[str(l+((k-1)*9))], "list")
+                            sub_list_table.append(0)
+                        elif str(type(self.sudoku_table[str(l+((k-1)*9))]))=="<class 'int'>":
+                            print(self.sudoku_table[str(l+((k-1)*9))], "int")
+                            sub_list_table.append(self.sudoku_table[str(l+(k-1)*9)])
+                    self.list_table.append(sub_list_table)
+                self.list_table = self.basic_backtracking(self.list_table)
+                self.sudoku_table = {}
+                for k in range(1, 10):
+                    for l in range(1, 10):
+                        self.sudoku_table[f"{l+(k-1)*9}"] = self.list_table[k-1][l-1]
+                        if self.sudoku_table[f"{l+(k-1)*9}"] == False:
+                            self.table_is_completed = "won't ever"
+                            break
+            if self.table_is_completed != "won't ever":
+                for k in self.sudoku_table:
+                    if len(list(set(self.list_of_hints) & set([k]))) == 0:
+                        temp_label = Label(tk, text = f"{self.sudoku_table[k]}", bg = "white", fg = "black", font=("Calibri", 30))
+                        temp_label.place(x = 8 +(int(k) -1 -((int(k)-1)//9)*9)*55, y =  8 +((int(k)-1)//9)*55, width = 44, height = 44 )
+                        try:
+                            self.enter_numbers[int(k)-1].place_forget()
+                        except:
+                            pass
+            else:
+                self.warn_about_error("There's no possible solution!")
         else:
             self.warn_about_error(reason)
 
@@ -670,12 +677,7 @@ class Sudoku_main_work:
                 return False
         return lst
                 
-            
-        
 
-def copy_the_dict(dic):
-    return dict(dic.copy())
-    
 def list_to_dict(lst):
     dic = {}
     for k in range(0, 81):
