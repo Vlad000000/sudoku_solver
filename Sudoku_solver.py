@@ -56,8 +56,9 @@ class Sudoku_main_work:
             for k in self.list_of_hints:
                 self.fsob_improved(int(k))
             self.table_is_completed = "no"
-            itert = 0
-            while self.table_is_completed == "no" and itert < 50:
+            self.table_is_changed = "n/a"
+            while self.table_is_completed == "no" and self.table_is_changed != "no":
+                self.table_is_changed = "no"
                 self.look_for_one_in_list()
                 if self.table_is_completed != "won't ever":
                     self.look_throught_blocks()
@@ -72,7 +73,6 @@ class Sudoku_main_work:
                     self.obvious_pair()
                 else:
                     break
-                itert +=1
             if self.table_is_completed != "won't ever":
                 self.list_table = []
                 for k in range(1, 10):
@@ -140,7 +140,6 @@ class Sudoku_main_work:
             itert+=1
 
     def look_for_one_in_list(self):
-        sudoku_table_start = self.sudoku_table.copy()
         while True:
             for k in self.sudoku_table:
                 temp = self.sudoku_table[f"{k}"]
@@ -156,16 +155,15 @@ class Sudoku_main_work:
                         temp_label.place(x = 8 +(int(k) -1 -((int(k)-1)//9)*9)*55, y =  8 +((int(k)-1)//9)*55, width = 44, height = 44 )
                         self.fsob_improved(int(k))
                         print(f"The {temp[0]} assigned to {k} cell (one in list)")
-            if self.sudoku_table == sudoku_table_start:
+                        self.table_is_changed = "yes"
+            if self.table_is_changed != "yes" or self.table_is_completed == "won't ever":
                 break
             else:
-                pass
-        
+                self.table_is_changed = "no"
 
 
 
     def look_throught_blocks(self):
-        print("Before:", self.sudoku_table)
         for b in self.block_starters:
             for k in range(1, 10):
                 temp = []
@@ -185,10 +183,9 @@ class Sudoku_main_work:
                     temp_label.place(x = 8 +(int(temp[0]) -1 -((int(temp[0])-1)//9)*9)*55, y =  8 +((int(temp[0])-1)//9)*55, width = 44, height = 44 )
                     self.fsob_improved(int(temp[0]))
                     print(f"The {k} assigned to {temp[0]} cell (square)")
-                    print("After:", self.sudoku_table)
+                    self.table_is_changed = "yes"
 
     def look_throught_rows(self):
-        print("Before:", self.sudoku_table)
         for r in self.row_starters:
             for k in range(1, 10):
                 temp = []
@@ -207,7 +204,7 @@ class Sudoku_main_work:
                     temp_label.place(x = 8 +(int(temp[0]) -1 -((int(temp[0])-1)//9)*9)*55, y =  8 +((int(temp[0])-1)//9)*55, width = 44, height = 44 )
                     self.fsob_improved(int(temp[0]))
                     print(f"The {k} assigned to {temp[0]} cell (row)")
-                    print("After:", self.sudoku_table)
+                    self.table_is_changed = "yes"
 
     def look_throught_columns(self):
         for c in range(1, 10):
@@ -230,6 +227,7 @@ class Sudoku_main_work:
                     temp_label.place(x = 8 +(int(temp[0]) -1 -((int(temp[0])-1)//9)*9)*55, y =  8 +((int(temp[0])-1)//9)*55, width = 44, height = 44 )
                     self.fsob_improved(int(temp[0]))
                     print(f"The {k} assigned to {temp[0]} cell (column)")
+                    self.table_is_changed = "yes"
 
     def blockade_seek(self):
         for b in self.block_starters:
@@ -272,6 +270,7 @@ class Sudoku_main_work:
                             try:
                                 self.sudoku_table[f"{j}"].remove(int(k))
                                 print(f"Blockade of {k} in block enumeration {j} (horizontal)")
+                                self.table_is_changed = "yes"
                             except:
                                 pass
                 except:
@@ -291,6 +290,7 @@ class Sudoku_main_work:
                             try:
                                 self.sudoku_table[f"{j*9+horizontal_position_floor}"].remove(int(k))
                                 print(f"Blockade of {k} in block enumerated {j*9+horizontal_position_floor} (vertical)")
+                                self.table_is_changed = "yes"
                             except:
                                 pass
                 except:
@@ -321,7 +321,8 @@ class Sudoku_main_work:
                             for index in cell_index:
                                 if self.sudoku_table[index] != [block_double_num[first], block_double_num[second]]:
                                     self.sudoku_table[index] = [block_double_num[first], block_double_num[second]]      #звужує список дозволених цифр до двох
-                                    print(f"{index}: list decresed to {[block_double_num[first], block_double_num[second]]} (square)\n", self.sudoku_table)
+                                    print(f"{index}: list decresed to {[block_double_num[first], block_double_num[second]]} (square)")
+                                    self.table_is_changed = "yes"
                                     
         for r in self.row_starters:            #9 перевірок (по одній на кожну лінію)
             block_double_num = []                #сюди зберігається цифра, що повторюється двічі в списках дозволених цифр
@@ -345,7 +346,8 @@ class Sudoku_main_work:
                             for index in cell_index:
                                 if self.sudoku_table[index] != [block_double_num[first], block_double_num[second]]:
                                     self.sudoku_table[index] = [block_double_num[first], block_double_num[second]]
-                                    print(f"{index}: list decresed to {[block_double_num[first], block_double_num[second]]} (row)\n", self.sudoku_table)
+                                    print(f"{index}: list decresed to {[block_double_num[first], block_double_num[second]]} (row)")
+                                    self.table_is_changed = "yes"
 
         for c in range(1, 10):            #9 перевірок (по одній на кожен стовпець)
             block_double_num = []                #сюди зберігається цифра, що повторюється двічі в списках дозволених цифр
@@ -369,7 +371,8 @@ class Sudoku_main_work:
                             for index in cell_index:
                                 if self.sudoku_table[index] != [block_double_num[first], block_double_num[second]]:
                                     self.sudoku_table[index] = [block_double_num[first], block_double_num[second]]
-                                    print(f"{index}: list decresed to {[block_double_num[first], block_double_num[second]]} (column)\n", self.sudoku_table)
+                                    print(f"{index}: list decresed to {[block_double_num[first], block_double_num[second]]} (column)")
+                                    self.table_is_changed = "yes"
 
     def hidden_triple_seek(self):
         for b in self.block_starters:            #9 перевірок (по одній на кожен блок)
@@ -397,7 +400,9 @@ class Sudoku_main_work:
                                 for index in cell_index:
                                     if self.sudoku_table[index] != [block_triple_num[first], block_triple_num[second], block_triple_num[third]]:
                                         self.sudoku_table[index] = [block_triple_num[first], block_triple_num[second], block_triple_num[third]]       #звужує список дозволених цифр до трьох
-                                        print(f"{index}: list decresed to {[block_triple_num[first], block_triple_num[second], block_triple_num[third]]} (square)\n", self.sudoku_table)
+                                        print(f"{index}: list decresed to {[block_triple_num[first], block_triple_num[second], block_triple_num[third]]} (square)")
+                                        self.table_is_changed = "yes"
+
                                         
         for r in self.row_starters:              #9 перевірок (по одній на кожну лінію)
             block_triple_num = []                #сюди зберігається цифра, що повторюється тричі в списках дозволених цифр
@@ -422,8 +427,10 @@ class Sudoku_main_work:
                                 for index in cell_index:
                                     if self.sudoku_table[index] != [block_triple_num[first], block_triple_num[second], block_triple_num[third]]:
                                         self.sudoku_table[index] = [block_triple_num[first], block_triple_num[second], block_triple_num[third]]
-                                        print(f"{index}: list decresed to {[block_triple_num[first], block_triple_num[second], block_triple_num[third]]} (row)\n", self.sudoku_table)
+                                        print(f"{index}: list decresed to {[block_triple_num[first], block_triple_num[second], block_triple_num[third]]} (row)")
+                                        self.table_is_changed = "yes"
 
+                                        
         for c in range(1, 10):                   #9 перевірок (по одній на кожен сповпець)
             block_triple_num = []                #сюди зберігається цифра, що повторюється тричі в списках дозволених цифр
             for k in range(1, 10):               #k - int, цифра, що перевіряється
@@ -447,58 +454,138 @@ class Sudoku_main_work:
                                 for index in cell_index:
                                     if self.sudoku_table[index] != [block_triple_num[first], block_triple_num[second], block_triple_num[third]]:
                                         self.sudoku_table[index] = [block_triple_num[first], block_triple_num[second], block_triple_num[third]]
-                                        print(f"{index}: list decresed to {[block_triple_num[first], block_triple_num[second], block_triple_num[third]]} (column)\n", self.sudoku_table)
+                                        print(f"{index}: list decresed to {[block_triple_num[first], block_triple_num[second], block_triple_num[third]]} (column)")
+                                        self.table_is_changed = "yes"
+
                                         
     def sword_fish_wing_seek(self):
         for i in range(1, 7):
             for j in range(i+1, 9):
                 for h in range(j+1, 10):
-                    if (((((i-1)//3)+1)*3)+1 == ((((j-1)//3)+1)*3)+1 and ((((i-1)//3)+1)*3)+1 != ((((h-1)//3)+1)*3)+1) or (((((h-1)//3)+1)*3)+1 == ((((j-1)//3)+1)*3)+1 and ((((i-1)//3)+1)*3)+1 != ((((j-1)//3)+1)*3)+1):
+                    if not ((((i-1)//3)+1)*3)+1 == ((((j-1)//3)+1)*3)+1 and ((((i-1)//3)+1)*3)+1 == ((((h-1)//3)+1)*3)+1:
                         for k in range(0, 6):
                             for n in range(k+1, 8):
                                 for m in range(n+1, 9):
-                                    if (((k//3)+1)*3)+1 != (((n//3)+1)*3)+1 and (((m//3)+1)*3)+1 != (((n//3)+1)*3)+1 and (((k//3)+1)*3)+1 != (((m//3)+1)*3)+1:
-                                        temp = [f"{i+k*9}", f"{j+k*9}", f"{h+k*9}", f"{i+n*9}", f"{j+n*9}", f"{h+n*9}", f"{i+m*9}", f"{j+m*9}", f"{h+m*9}"]                                      
-                                        if (str(type(self.sudoku_table[f"{i+(k*9)}"]))=="<class 'int'>" and str(type(self.sudoku_table[f"{j+(n*9)}"]))=="<class 'int'>" and str(type(self.sudoku_table[f"{h+(m*9)}"]))=="<class 'int'>") or (str(type(self.sudoku_table[f"{i+(k*9)}"]))=="<class 'int'>" and str(type(self.sudoku_table[f"{j+(m*9)}"]))=="<class 'int'>" and str(type(self.sudoku_table[f"{h+(n*9)}"]))=="<class 'int'>") or(str(type(self.sudoku_table[f"{j+(k*9)}"]))=="<class 'int'>" and str(type(self.sudoku_table[f"{i+(n*9)}"]))=="<class 'int'>" and str(type(self.sudoku_table[f"{h+(m*9)}"]))=="<class 'int'>") or(str(type(self.sudoku_table[f"{j+(k*9)}"]))=="<class 'int'>" and str(type(self.sudoku_table[f"{h+(n*9)}"]))=="<class 'int'>" and str(type(self.sudoku_table[f"{i+(m*9)}"]))=="<class 'int'>") or(str(type(self.sudoku_table[f"{h+(k*9)}"]))=="<class 'int'>" and str(type(self.sudoku_table[f"{i+(n*9)}"]))=="<class 'int'>" and str(type(self.sudoku_table[f"{j+(m*9)}"]))=="<class 'int'>") or (str(type(self.sudoku_table[f"{h+(k*9)}"]))=="<class 'int'>" and str(type(self.sudoku_table[f"{j+(n*9)}"]))=="<class 'int'>" and str(type(self.sudoku_table[f"{i+(m*9)}"]))=="<class 'int'>"):
-                                            filtered_temp = [d for d in temp if not isinstance(self.sudoku_table[d], int)]
-                                            if len(filtered_temp) == 6:
-                                                l = list(set(self.sudoku_table[filtered_temp[0]]) & set(self.sudoku_table[filtered_temp[1]]) & set(self.sudoku_table[filtered_temp[2]]) & set(self.sudoku_table[filtered_temp[3]]) & set(self.sudoku_table[filtered_temp[4]]) & set(self.sudoku_table[filtered_temp[5]]))
-                                                if len(l) == 1:
-                                                    print("B", self.sudoku_table)
+                                    if not (((k//3)+1)*3)+1 == (((n//3)+1)*3)+1 and (((k//3)+1)*3)+1 == (((m//3)+1)*3)+1:
+                                        print("here")
+                                        candidate = 0
+                                        for num in range(0, 10):
+                                            count = 0
+                                            for pos in range(0, 9):
+                                                try:
+                                                    lst = list(set(self.sudoku_table[f"{pos+1+k*9}"]) & set([num]))
+                                                    if len(lst) == 1:
+                                                        count += 1
+                                                except:
+                                                    pass
+                                            if count == 2:
+                                                count = 0
+                                                for pos in range(0, 9):
+                                                    try:
+                                                        lst = list(set(self.sudoku_table[f"{pos+1+n*9}"]) & set([num]))
+                                                        if len(lst) == 1:
+                                                            count += 1
+                                                    except:
+                                                        pass
+                                                if count == 2:
+                                                    count = 0
+                                                    for pos in range(0, 9):
+                                                        try:
+                                                            lst = list(set(self.sudoku_table[f"{pos+1+m*9}"]) & set([num]))
+                                                            if len(lst) == 1:
+                                                                count += 1
+                                                        except:
+                                                            pass
+                                                    if count == 2:
+                                                        candidate = num
+                                            elif count == 3:
+                                                count = 0
+                                                for pos in range(0, 9):
+                                                    try:
+                                                        lst = list(set(self.sudoku_table[f"{pos+1+n*9}"]) & set([num]))
+                                                        if len(lst) == 1:
+                                                            count += 1
+                                                    except:
+                                                        pass
+                                                if count == 3:
+                                                    count = 0
+                                                    for pos in range(0, 9):
+                                                        try:
+                                                            lst = list(set(self.sudoku_table[f"{pos+1+m*9}"]) & set([num]))
+                                                            if len(lst) == 1:
+                                                                count += 1
+                                                        except:
+                                                            pass
+                                                    if count == 3:
+                                                        candidate = num
+                                            else:
+                                                count = 0
+                                                for pos in range(0, 9):
+                                                    try:
+                                                        lst = list(set(self.sudoku_table[f"{i+pos*9}"]) & set([num]))
+                                                        if len(lst) == 1:
+                                                            count += 1
+                                                    except:
+                                                        pass
+                                                if count == 2:
+                                                    count = 0
+                                                    for pos in range(0, 9):
+                                                        try:
+                                                            lst = list(set(self.sudoku_table[f"{j+pos*9}"]) & set([num]))
+                                                            if len(lst) == 1:
+                                                                count += 1
+                                                        except:
+                                                            pass
+                                                    if count == 2:
+                                                        count = 0
+                                                        for pos in range(0, 9):
+                                                            try:
+                                                                lst = list(set(self.sudoku_table[f"{h+pos*9}"]) & set([num]))
+                                                                if len(lst) == 1:
+                                                                    count += 1
+                                                            except:
+                                                                pass
+                                                        if count == 2:
+                                                            candidate = num
+                                                elif count == 3:
+                                                    count = 0
+                                                    for pos in range(0, 9):
+                                                        try:
+                                                            lst = list(set(self.sudoku_table[f"{j+pos*9}"]) & set([num]))
+                                                            if len(lst) == 1:
+                                                                count += 1
+                                                        except:
+                                                            pass
+                                                    if count == 3:
+                                                        count = 0
+                                                        for pos in range(0, 9):
+                                                            try:
+                                                                lst = list(set(self.sudoku_table[f"{h+pos*9}"]) & set([num]))
+                                                                if len(lst) == 1:
+                                                                    count += 1
+                                                            except:
+                                                                pass
+                                                        if count == 3:
+                                                            candidate = num
+                                            if candidate != 0:
+                                                filtered_temp = [d for d in temp if not isinstance(self.sudoku_table[d], int)]
+                                                filtered_temp_2 = [d for d in filtered_temp if len(list(set(self.sudoku_table[d]) & set([candidate]))) == 1]
+                                                if len(filtered_temp) == len(filtered_temp_2):
+                                                    print(f"Swordfishing {l[0]}, bones: {filtered_temp}")
                                                     for r in [k, n, m]:
                                                         for f in range(0, 9):
                                                             if str(type(self.sudoku_table[f"{f+(r*9)+1}"]))!="<class 'int'>" and self.delete_needed_sword_fish(f"{f+(r*9)+1}", temp)=='yes':
                                                                 if len(list(set(self.sudoku_table[f"{f+(r*9)+1}"]) & set(l)))==1:
                                                                     self.sudoku_table[f"{f+(r*9)+1}"].remove(int(l[0]))
+                                                                    print(f"Swordfished {int(l[0])} out of the {f+(r*9)+1} cell")
+                                                                    self.table_is_changed = "yes"
                                                     for c in [i, j, h]:
                                                         for f in range(0, 9):
                                                             if str(type(self.sudoku_table[f"{c+(f*9)}"]))!="<class 'int'>" and self.delete_needed_sword_fish(f"{c+(f*9)}", temp)=='yes':
                                                                 if len(list(set(self.sudoku_table[f"{c+(f*9)}"]) & set(l)))==1:
                                                                     self.sudoku_table[f"{c+(f*9)}"].remove(int(l[0]))
-                                                    print("A", self.sudoku_table)
-                    elif ((((h-1)//3)+1)*3)+1 != ((((j-1)//3)+1)*3)+1 and ((((i-1)//3)+1)*3)+1 != ((((j-1)//3)+1)*3)+1 and ((((h-1)//3)+1)*3)+1 != ((((i-1)//3)+1)*3)+1:
-                        for k in range(0, 6):
-                            for n in range(k+1, 8):
-                                for m in range(n+1, 9):
-                                    if ((((k//3)+1)*3)+1 == (((n//3)+1)*3)+1 and (((n//3)+1)*3)+1 != (((m//3)+1)*3)+1) or ((((n//3)+1)*3)+1 == (((m//3)+1)*3)+1 and (((m//3)+1)*3)+1 != (((k//3)+1)*3)+1) or ((((k//3)+1)*3)+1 != (((n//3)+1)*3)+1 and (((m//3)+1)*3)+1 != (((n//3)+1)*3)+1 and (((k//3)+1)*3)+1 != (((m//3)+1)*3)+1):
-                                        temp = [f"{i+k*9}", f"{j+k*9}", f"{h+k*9}", f"{i+n*9}", f"{j+n*9}", f"{h+n*9}", f"{i+m*9}", f"{j+m*9}", f"{h+m*9}"]       
-                                        if (str(type(self.sudoku_table[f"{i+(k*9)}"]))=="<class 'int'>" and str(type(self.sudoku_table[f"{j+(n*9)}"]))=="<class 'int'>" and str(type(self.sudoku_table[f"{h+(m*9)}"]))=="<class 'int'>") or (str(type(self.sudoku_table[f"{i+(k*9)}"]))=="<class 'int'>" and str(type(self.sudoku_table[f"{j+(m*9)}"]))=="<class 'int'>" and str(type(self.sudoku_table[f"{h+(n*9)}"]))=="<class 'int'>") or(str(type(self.sudoku_table[f"{j+(k*9)}"]))=="<class 'int'>" and str(type(self.sudoku_table[f"{i+(n*9)}"]))=="<class 'int'>" and str(type(self.sudoku_table[f"{h+(m*9)}"]))=="<class 'int'>") or(str(type(self.sudoku_table[f"{j+(k*9)}"]))=="<class 'int'>" and str(type(self.sudoku_table[f"{h+(n*9)}"]))=="<class 'int'>" and str(type(self.sudoku_table[f"{i+(m*9)}"]))=="<class 'int'>") or(str(type(self.sudoku_table[f"{h+(k*9)}"]))=="<class 'int'>" and str(type(self.sudoku_table[f"{i+(n*9)}"]))=="<class 'int'>" and str(type(self.sudoku_table[f"{j+(m*9)}"]))=="<class 'int'>") or (str(type(self.sudoku_table[f"{h+(k*9)}"]))=="<class 'int'>" and str(type(self.sudoku_table[f"{j+(n*9)}"]))=="<class 'int'>" and str(type(self.sudoku_table[f"{i+(m*9)}"]))=="<class 'int'>"):
-                                            filtered_temp = [d for d in temp if not isinstance(self.sudoku_table[d], int)]
-                                            if len(filtered_temp) == 6:
-                                                l = list(set(self.sudoku_table[filtered_temp[0]]) & set(self.sudoku_table[filtered_temp[1]]) & set(self.sudoku_table[filtered_temp[2]]) & set(self.sudoku_table[filtered_temp[3]]) & set(self.sudoku_table[filtered_temp[4]]) & set(self.sudoku_table[filtered_temp[5]]))
-                                                if len(l) == 1:
-                                                    print("B", self.sudoku_table)
-                                                    for r in [k, n, m]:
-                                                        for f in range(0, 9):
-                                                            if str(type(self.sudoku_table[f"{f+(r*9)+1}"]))!="<class 'int'>" and self.delete_needed_sword_fish(f"{f+(r*9)+1}", temp)=='yes':
-                                                                if len(list(set(self.sudoku_table[f"{f+(r*9)+1}"]) & set(l)))==1:
-                                                                    self.sudoku_table[f"{f+(r*9)+1}"].remove(int(l[0]))
-                                                    for c in [i, j, h]:
-                                                        for f in range(0, 9):
-                                                            if str(type(self.sudoku_table[f"{c+(f*9)}"]))!="<class 'int'>" and self.delete_needed_sword_fish(f"{c+(f*9)}", temp)=='yes':
-                                                                if len(list(set(self.sudoku_table[f"{c+(f*9)}"]) & set(l)))==1:
-                                                                    self.sudoku_table[f"{c+(f*9)}"].remove(int(l[0]))
-                                                    print("A", self.sudoku_table)
+                                                                    print(f"Swordfished {int(l[0])} out of the {c+(f*9)} cell")
+                                                                    self.table_is_changed = "yes"
                                                         
     def y_wing_seek(self):
         for i in range(1, 7):
@@ -512,28 +599,32 @@ class Sudoku_main_work:
                                     if len(list(set(self.sudoku_table[f"{i+k*9}"]) & set(self.sudoku_table[f"{j+k*9}"]))) == 1 and len(list(set(self.sudoku_table[f"{i+k*9}"]) & set(self.sudoku_table[f"{i+n*9}"]))) == 1 and len(list(set(self.sudoku_table[f"{i+n*9}"]) & set(self.sudoku_table[f"{j+k*9}"]))) == 1 and len(self.sudoku_table[f"{j+k*9}"]) == 2 and len(self.sudoku_table[f"{i+n*9}"]) == 2 and len(self.sudoku_table[f"{i+k*9}"]) == 2:
                                         try:
                                             self.sudoku_table[f"{j+n*9}"].remove(int(list(set(self.sudoku_table[f"{i+n*9}"]) & set(self.sudoku_table[f"{j+k*9}"]))[0]))
-                                            print(f"Blockade of {h} in block enumerated {j+n*9} (y wing) {[i+k*9, j+k*9, i+n*9, j+n*9]}")
+                                            print(f"Blockade of {h} in block enumerated {j+n*9} (y wing)")
+                                            self.table_is_changed = "yes"
                                         except:
                                             pass
                                 elif len(list(set(self.sudoku_table[f"{i+k*9}"]) & set(self.sudoku_table[f"{j+k*9}"]) & set(self.sudoku_table[f"{j+n*9}"]))) == 0:
                                     if len(list(set(self.sudoku_table[f"{i+k*9}"]) & set(self.sudoku_table[f"{j+k*9}"]))) == 1 and len(list(set(self.sudoku_table[f"{i+k*9}"]) & set(self.sudoku_table[f"{j+n*9}"]))) == 1 and len(list(set(self.sudoku_table[f"{j+n*9}"]) & set(self.sudoku_table[f"{j+k*9}"]))) == 1 and len(self.sudoku_table[f"{j+k*9}"]) == 2 and len(self.sudoku_table[f"{j+n*9}"]) == 2 and len(self.sudoku_table[f"{i+k*9}"]) == 2:
                                         try:
                                             self.sudoku_table[f"{i+n*9}"].remove(int(list(set(self.sudoku_table[f"{i+k*9}"]) & set(self.sudoku_table[f"{j+n*9}"]))[0]))
-                                            print(f"Blockade of {h} in block enumerated {i+n*9} (y wing) {[i+k*9, j+k*9, i+n*9, j+n*9]}")
+                                            print(f"Blockade of {h} in block enumerated {i+n*9} (y wing)")
+                                            self.table_is_changed = "yes"
                                         except:
                                             pass
                                 elif len(list(set(self.sudoku_table[f"{i+n*9}"]) & set(self.sudoku_table[f"{j+k*9}"]) & set(self.sudoku_table[f"{j+n*9}"]))) == 0:
                                     if len(list(set(self.sudoku_table[f"{i+n*9}"]) & set(self.sudoku_table[f"{j+k*9}"]))) == 1 and len(list(set(self.sudoku_table[f"{i+n*9}"]) & set(self.sudoku_table[f"{j+n*9}"]))) == 1 and len(list(set(self.sudoku_table[f"{j+n*9}"]) & set(self.sudoku_table[f"{j+k*9}"]))) == 1 and len(self.sudoku_table[f"{j+n*9}"]) == 2 and len(self.sudoku_table[f"{i+n*9}"]) == 2 and len(self.sudoku_table[f"{j+k*9}"]) == 2:
                                         try:
                                             self.sudoku_table[f"{i+k*9}"].remove(int(list(set(self.sudoku_table[f"{j+k*9}"]) & set(self.sudoku_table[f"{i+n*9}"]))[0]))
-                                            print(f"Blockade of {h} in block enumerated {i+k*9} (y wing) {[i+k*9, j+k*9, i+n*9, j+n*9]}")
+                                            print(f"Blockade of {h} in block enumerated {i+k*9} (y wing)")
+                                            self.table_is_changed = "yes"
                                         except:
                                             pass
                                 elif len(list(set(self.sudoku_table[f"{i+n*9}"]) & set(self.sudoku_table[f"{i+k*9}"]) & set(self.sudoku_table[f"{j+n*9}"]))) == 0:
                                     if len(list(set(self.sudoku_table[f"{i+n*9}"]) & set(self.sudoku_table[f"{i+k*9}"]))) == 1 and len(list(set(self.sudoku_table[f"{i+n*9}"]) & set(self.sudoku_table[f"{j+n*9}"]))) == 1 and len(list(set(self.sudoku_table[f"{j+n*9}"]) & set(self.sudoku_table[f"{i+k*9}"]))) == 1 and len(self.sudoku_table[f"{j+n*9}"]) == 2 and len(self.sudoku_table[f"{i+n*9}"]) == 2 and len(self.sudoku_table[f"{i+k*9}"]) == 2:
                                         try:
                                             self.sudoku_table[f"{j+k*9}"].remove(int(list(set(self.sudoku_table[f"{i+k*9}"]) & set(self.sudoku_table[f"{j+n*9}"]))[0]))
-                                            print(f"Blockade of {h} in block enumerated {j+k*9} (y wing) {[i+k*9, j+k*9, i+n*9, j+n*9]}")
+                                            print(f"Blockade of {h} in block enumerated {j+k*9} (y wing)")
+                                            self.table_is_changed = "yes"
                                         except:
                                             pass
                                             
@@ -545,14 +636,15 @@ class Sudoku_main_work:
                         if str(type(self.sudoku_table[f"{i+k*9}"]))=="<class 'list'>" and str(type(self.sudoku_table[f"{j+k*9}"]))=="<class 'list'>" and str(type(self.sudoku_table[f"{i+n*9}"]))=="<class 'list'>" and str(type(self.sudoku_table[f"{j+n*9}"]))=="<class 'list'>":
                             if (len(self.sudoku_table[f"{i+k*9}"]) == 2 and len(self.sudoku_table[f"{j+k*9}"]) == 2 and len(self.sudoku_table[f"{i+n*9}"]) == 2) or (len(self.sudoku_table[f"{i+k*9}"]) == 2 and len(self.sudoku_table[f"{j+k*9}"]) == 2 and len(self.sudoku_table[f"{j+n*9}"]) == 2) or (len(self.sudoku_table[f"{i+k*9}"]) == 2 and len(self.sudoku_table[f"{i+n*9}"]) == 2 and len(self.sudoku_table[f"{j+n*9}"]) == 2) or (len(self.sudoku_table[f"{j+k*9}"]) == 2 and len(self.sudoku_table[f"{i+n*9}"]) == 2 and len(self.sudoku_table[f"{j+n*9}"]) == 2):
                                 lst = list(set(self.sudoku_table[f"{i+k*9}"]) & set(self.sudoku_table[f"{j+k*9}"]) & set(self.sudoku_table[f"{i+n*9}"])& set(self.sudoku_table[f"{j+n*9}"]))
-                                if len(lst) > 0 and ((len(list(set(self.sudoku_table[f"{i+k*9}"]) & set(self.sudoku_table[f"{j+k*9}"])))==2 and len(list(set(self.sudoku_table[f"{i+n*9}"]) & set(self.sudoku_table[f"{j+n*9}"])))==2) or (len(list(set(self.sudoku_table[f"{i+k*9}"]) & set(self.sudoku_table[f"{i+n*9}"])))==2 and len(list(set(self.sudoku_table[f"{j+n*9}"]) & set(self.sudoku_table[f"{j+k*9}"])))==2):
+                                if len(lst) > 0 and ((len(list(set(self.sudoku_table[f"{i+k*9}"]) & set(self.sudoku_table[f"{j+k*9}"])))==2 and len(list(set(self.sudoku_table[f"{i+n*9}"]) & set(self.sudoku_table[f"{j+n*9}"])))==2) or (len(list(set(self.sudoku_table[f"{i+k*9}"]) & set(self.sudoku_table[f"{i+n*9}"])))==2 and len(list(set(self.sudoku_table[f"{j+n*9}"]) & set(self.sudoku_table[f"{j+k*9}"])))==2)):
                                     for h in lst:
                                         try:
                                             for m in range(0, 9):
                                                 if str(type(self.sudoku_table[f"{m*9+i}"]))=="<class 'list'>" and self.delete_needed_x_wing(m*9+i, [i, j, k, n])=="yes" and len(list(set(self.sudoku_table[f"{m*9+i}"]) & set([h])))==1:
                                                     try:
                                                         self.sudoku_table[f"{m*9+i}"].remove(int(h))
-                                                        print(f"Blockade of {h} in block enumerated {m*9+i} (x wing) {[i+k*9, j+k*9, i+n*9, j+n*9]}")
+                                                        print(f"Blockade of {h} in block enumerated {m*9+i} (x wing)")
+                                                        self.table_is_changed = "yes"
                                                     except:
                                                         pass
                                         except:
@@ -562,7 +654,8 @@ class Sudoku_main_work:
                                                 if str(type(self.sudoku_table[f"{m*9+j}"]))=="<class 'list'>" and self.delete_needed_x_wing(m*9+j, [i, j, k, n])=="yes" and len(list(set(self.sudoku_table[f"{m*9+j}"]) & set([h])))==1:
                                                     try:
                                                         self.sudoku_table[f"{m*9+j}"].remove(int(h))
-                                                        print(f"Blockade of {h} in block enumerated {m*9+j} (x wing) {[i+k*9, j+k*9, i+n*9, j+n*9]}")
+                                                        print(f"Blockade of {h} in block enumerated {m*9+j} (x wing)")
+                                                        self.table_is_changed = "yes"
                                                     except:
                                                         pass
                                         except:
@@ -572,7 +665,8 @@ class Sudoku_main_work:
                                                 if str(type(self.sudoku_table[f"{m+k*9}"]))=="<class 'list'>" and self.delete_needed_x_wing(m+k*9, [i, j, k, n])=="yes" and len(list(set(self.sudoku_table[f"{m+k*9}"]) & set([h])))==1:
                                                     try:
                                                         self.sudoku_table[f"{m+k*9}"].remove(int(h))
-                                                        print(f"Blockade of {h} in block enumeration {m+k*9} (x wing) {[i+k*9, j+k*9, i+n*9, j+n*9]}")
+                                                        print(f"Blockade of {h} in block enumeration {m+k*9} (x wing)")
+                                                        self.table_is_changed = "yes"
                                                     except:
                                                         pass
                                         except:
@@ -582,7 +676,8 @@ class Sudoku_main_work:
                                                 if str(type(self.sudoku_table[f"{m+n*9}"]))=="<class 'list'>" and self.delete_needed_x_wing(m+n*9, [i, j, k, n])=="yes" and len(list(set(self.sudoku_table[f"{m+n*9}"]) & set([h])))==1:
                                                     try:
                                                         self.sudoku_table[f"{m+n*9}"].remove(int(h))
-                                                        print(f"Blockade of {h} in block enumeration {m+n*9} (x wing) {[i+k*9, j+k*9, i+n*9, j+n*9]}")
+                                                        print(f"Blockade of {h} in block enumeration {m+n*9} (x wing)")
+                                                        self.table_is_changed = "yes"
                                                     except:
                                                         pass
                                         except:
@@ -607,6 +702,7 @@ class Sudoku_main_work:
                                     if len(list(set(self.sudoku_table[f"{b+k+(n*9)}"]) & set([num])))==1 and f"{b+k+(n*9)}"!=block_two_num_lists[0] and f"{b+k+(n*9)}"!=block_two_num_lists[1]:
                                         self.sudoku_table[f"{b+k+(n*9)}"].remove(int(num))
                                         print(f"{num} has been removed from cell {b+k+(n*9)} (obvious pair)")
+                                        self.table_is_changed = "yes"
             elif len(block_two_num_lists) == 3:
                 if len(list(set(self.sudoku_table[f"{block_two_num_lists[0]}"]) & set(self.sudoku_table[f"{block_two_num_lists[1]}"]) & set(self.sudoku_table[f"{block_two_num_lists[2]}"]))) == 0:
                     if len(list(set(self.sudoku_table[f"{block_two_num_lists[0]}"]) & set(self.sudoku_table[f"{block_two_num_lists[1]}"]))) == 1 and len(list(set(self.sudoku_table[f"{block_two_num_lists[2]}"]) & set(self.sudoku_table[f"{block_two_num_lists[1]}"]))) == 1 and len(list(set(self.sudoku_table[f"{block_two_num_lists[0]}"]) & set(self.sudoku_table[f"{block_two_num_lists[2]}"]))) == 1:               
@@ -619,6 +715,7 @@ class Sudoku_main_work:
                                         if len(list(set(self.sudoku_table[f"{b+k+(n*9)}"]) & set([num])))==1 and f"{b+k+(n*9)}"!=block_two_num_lists[0] and f"{b+k+(n*9)}"!=block_two_num_lists[1] and f"{b+k+(n*9)}"!=block_two_num_lists[2]:
                                             self.sudoku_table[f"{b+k+(n*9)}"].remove(int(num))
                                             print(f"{num} has been removed from cell {b+k+(n*9)} (obvious triple pair)")
+                                            self.table_is_changed = "yes"
                                         
 
     def delete_needed_sword_fish(self, numb, area):
@@ -676,14 +773,6 @@ class Sudoku_main_work:
                             lst[c][r] = 0
                 return False
         return lst
-                
-
-def list_to_dict(lst):
-    dic = {}
-    for k in range(0, 81):
-        dic[f"k+1"] = lst[k]
-    return dic
-
 
 if __name__=='__main__':
     tk = Tk()
