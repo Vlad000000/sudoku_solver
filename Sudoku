@@ -323,8 +323,6 @@ class Sudoku_main_work:
             if self.solvability == "possible":
                 self.starfish()
             if self.solvability == "possible":
-                self.skyscraper()
-            if self.solvability == "possible":
                 self.pairs_and_triples()
             if self.solvability == "possible":
                 self.quads_and_quints()
@@ -1532,22 +1530,6 @@ class Sudoku_main_work:
                                             table_changed, self.ch_gl, self.moderate = True, True, True
                                             self.uses["Starfishing"] += 1
 
-    def skyscraper(self):
-        table_changed = True
-        while table_changed and self.solvability == "possible":
-            table_changed = False
-            for k in range(1, 10):
-                num_is_valid_for_method = True
-                meet_twice_in_column_c = []
-                num_is_valid_for_method_alt = True
-                meet_twice_in_row_c = []
-                if num_is_valid_for_method:
-                    for c in range(9):
-                        k_times = []
-                        for r in range(9):
-                            if str(type(self.sudoku_table[r][c]))=="<class 'list'>":
-                                if k in self.sudoku_table[r][c]:
-                                    k_times.append(r)
     def x_wing(self):
         table_changed = True
         while table_changed and self.solvability == "possible":
