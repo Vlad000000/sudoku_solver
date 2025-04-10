@@ -91,7 +91,7 @@ class Sudoku_main_work:
                          "Naked Triplet": 0, "Hidden Triplet": 0,
                          "Blockades": 0, "X-wing": 0, "Y-wings": 0,
                          "Swordfishing": 0, "Jellyfishing": 0,
-                         "Starfishing": 0, "Skyscrapering": 0, "XYZ-wings": 0}
+                         "Starfishing": 0, "Skyscrapering": 0, "XYZ-wings": 0, "Coloring": 0}
             self.list_of_changes_solving_mode = []
             self.action = 1
             self.create_empty_sudoku_table()
@@ -235,6 +235,8 @@ class Sudoku_main_work:
                 self.quads_and_quints()
             if self.solvability == "possible":
                 self.skyscrapers()
+            if self.solvability == "possible":
+                self.coloring()
 
 
     def sudoku_solve_branched(self, g):
@@ -1047,6 +1049,114 @@ class Sudoku_main_work:
                                     table_changed = self.ch_gl = self.moderate = True
                                     self.uses["Naked Quint"] += 1
 
+    def coloring(self):
+        table_changed = True
+        while table_changed and self.solvability == "possible":
+            table_changed = False     
+            for k in range(1, 10):
+                bivalue_cells = [(r, c) for r, c in product(range(9), repeat=2) if isinstance(self.sudoku_table[r][c], list) and len(self.sudoku_table[r][c]) == 2 and k in self.sudoku_table[r][c]]
+                if len(bivalue_cells) < 2:
+                    continue
+                graph = collections.defaultdict(list)
+                for (r1, c1), (r2, c2) in combinations(bivalue_cells, 2):
+                    if self._are_strongly_linked(r1, c1, r2, c2, k):
+                        graph[(r1, c1)].append((r2, c2))
+                        graph[(r2, c2)].append((r1, c1))
+                if not graph:
+                    continue
+                color = {}
+                chains = [] 
+                for cell in bivalue_cells:
+                    if cell not in color:
+                        queue = [cell]
+                        color[cell] = 'A'
+                        current_chain = [cell]
+                        while queue:
+                            current = queue.pop(0)
+                            for neighbor in graph.get(current, []):
+                                if neighbor not in color:
+                                    color[neighbor] = 'B' if color[current] == 'A' else 'A'
+                                    queue.append(neighbor)
+                                    current_chain.append(neighbor)
+                        chains.append(current_chain)
+
+                for chain in chains:
+                    color_conflict = False
+                    conflict_color = None
+                    for (r1, c1), (r2, c2) in combinations(chain, 2):
+                        if color[(r1, c1)] == color[(r2, c2)]:
+                            if (r1 == r2 or c1 == c2 or (r1 // 3 == r2 // 3 and c1 // 3 == c2 // 3)):
+                                color_conflict = True
+                                conflict_color = color[(r1, c1)]
+                                break
+
+                    if color_conflict:
+                        for (r, c) in chain:
+                            if color[(r, c)] == conflict_color and k in self.sudoku_table[r][c]:
+                                self.sudoku_table[r][c].remove(k)
+                                self.list_of_changes_solving_mode.append(
+                                    f"#{self.action} --- Coloring: removed {k} from {self.letter_for_collumn(c)}{r+1} (color conflict in chain)"
+                                )
+                                self.action += 1
+                                table_changed = True
+                                self.uses["Coloring"] += 1
+
+                for r, c in product(range(9), repeat=2):
+                    if (r, c) in color:
+                        continue
+                    if not isinstance(self.sudoku_table[r][c], list) or k not in self.sudoku_table[r][c]:
+                        continue
+                    
+                    for chain in chains:
+                        seen_colors = set()
+                        for (r2, c2) in chain:
+                            if k in self.sudoku_table[r2][c2]:
+                                if r == r2 or c == c2 or (r // 3 == r2 // 3 and c // 3 == c2 // 3):
+                                    seen_colors.add(color[(r2, c2)])
+                        
+                        if len(seen_colors) == 2:
+                            self.sudoku_table[r][c].remove(k)
+                            self.list_of_changes_solving_mode.append(
+                                f"#{self.action} --- Coloring: removed {k} from {self.letter_for_collumn(c)}{r+1} (sees both colors in a single chain)"
+                            )
+                            self.action += 1
+                            table_changed = True
+                            self.uses["Coloring"] += 1
+                            break 
+
+    def _are_strongly_linked(self, r1, c1, r2, c2, k):
+        if r1 == r2:
+            other_cells = [
+                (r1, c) for c in range(9)
+                if isinstance(self.sudoku_table[r1][c], list)
+                and k in self.sudoku_table[r1][c]
+                and (r1, c) not in {(r1, c1), (r1, c2)}
+            ]
+            if not other_cells:
+                return True
+        if c1 == c2:
+            other_cells = [
+                (r, c1) for r in range(9)
+                if isinstance(self.sudoku_table[r][c1], list)
+                and k in self.sudoku_table[r][c1]
+                and (r, c1) not in {(r1, c1), (r2, c1)}
+            ]
+            if not other_cells:
+                return True
+        if (r1 // 3 == r2 // 3) and (c1 // 3 == c2 // 3):
+            block_r = r1 // 3 * 3
+            block_c = c1 // 3 * 3
+            other_cells = [
+                (block_r + i, block_c + j)
+                for i in range(3) for j in range(3)
+                if isinstance(self.sudoku_table[block_r + i][block_c + j], list)
+                and k in self.sudoku_table[block_r + i][block_c + j]
+                and (block_r + i, block_c + j) not in {(r1, c1), (r2, c2)}
+            ]
+            if not other_cells:
+                return True
+        return False
+                            
     def swordfish(self):
         table_changed = True
         while table_changed and self.solvability == "possible":
