@@ -1559,7 +1559,7 @@ class Sudoku_main_work:
                                 if str(type(self.sudoku_table[meet_twice_in_column_c[1][1][0]][f]))=="<class 'list'>":
                                     if k in self.sudoku_table[meet_twice_in_column_c[1][1][0]][f]:
                                         self.sudoku_table[meet_twice_in_column_c[1][1][0]][f].remove(int(k))
-                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn_c(f)}{meet_twice_in_column[1][1][0]+1} (due to x-winging)")
+                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(f)}{meet_twice_in_column_c[1][1][0]+1} (due to skyscraping)")
                                         self.action += 1
                                         table_changed, self.ch_gl, self.moderate = True, True, True
                                         self.uses["Skyscrapering"] += 1
@@ -1567,7 +1567,7 @@ class Sudoku_main_work:
                                 if str(type(self.sudoku_table[meet_twice_in_column_c[0][1][0]][g]))=="<class 'list'>":
                                     if k in self.sudoku_table[meet_twice_in_column_c[0][1][0]][g]:
                                         self.sudoku_table[meet_twice_in_column_c[0][1][0]][g].remove(int(k))
-                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn_c(g)}{meet_twice_in_column[0][1][0]+1} (due to x-winging)")
+                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(g)}{meet_twice_in_column_c[0][1][0]+1} (due to skyscraping)")
                                         self.action += 1
                                         table_changed, self.ch_gl, self.moderate = True, True, True
                                         self.uses["Skyscrapering"] += 1
@@ -1576,7 +1576,7 @@ class Sudoku_main_work:
                                 if str(type(self.sudoku_table[meet_twice_in_column_c[1][0][0]][f]))=="<class 'list'>":
                                     if k in self.sudoku_table[meet_twice_in_column_c[1][0][0]][f]:
                                         self.sudoku_table[meet_twice_in_column_c[1][0][0]][f].remove(int(k))
-                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn_c(f)}{meet_twice_in_column[1][0][0]+1} (due to x-winging)")
+                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(f)}{meet_twice_in_column_c[1][0][0]+1} (due to skyscraping)")
                                         self.action += 1
                                         table_changed, self.ch_gl, self.moderate = True, True, True
                                         self.uses["Skyscrapering"] += 1
@@ -1584,7 +1584,7 @@ class Sudoku_main_work:
                                 if str(type(self.sudoku_table[meet_twice_in_column_c[0][0][0]][g]))=="<class 'list'>":
                                     if k in self.sudoku_table[meet_twice_in_column_c[0][0][0]][g]:
                                         self.sudoku_table[meet_twice_in_column_c[0][0][0]][g].remove(int(k))
-                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn_c(g)}{meet_twice_in_column[0][0][0]+1} (due to x-winging)")
+                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(g)}{meet_twice_in_column_c[0][0][0]+1} (due to skyscraping)")
                                         self.action += 1
                                         table_changed, self.ch_gl, self.moderate = True, True, True
                                         self.uses["Skyscrapering"] += 1    
@@ -1606,7 +1606,7 @@ class Sudoku_main_work:
                                 if str(type(self.sudoku_table[f][meet_twice_in_row_c[1][1][1]]))=="<class 'list'>":
                                     if k in self.sudoku_table[f][meet_twice_in_row_c[1][1][1]]:
                                         self.sudoku_table[f][meet_twice_in_row_c[1][1][1]].remove(int(k))
-                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(meet_twice_in_row_c[1][1][1])}{f+1} (due to x-winging)")
+                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(meet_twice_in_row_c[1][1][1])}{f+1} (due to skyscraping)")
                                         self.action += 1
                                         table_changed, self.ch_gl, self.moderate = True, True, True
                                         self.uses["Skyscrapering"] += 1
@@ -1614,7 +1614,7 @@ class Sudoku_main_work:
                                 if str(type(self.sudoku_table[g][meet_twice_in_row_c[0][1][1]]))=="<class 'list'>":
                                     if k in self.sudoku_table[g][meet_twice_in_row_c[0][1][1]]:
                                         self.sudoku_table[g][meet_twice_in_row_c[0][1][1]].remove(int(k))
-                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(meet_twice_in_row_c[0][1][1])}{g+1} (due to x-winging)")
+                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(meet_twice_in_row_c[0][1][1])}{g+1} (due to skyscraping)")
                                         self.action += 1
                                         table_changed, self.ch_gl, self.moderate = True, True, True
                                         self.uses["Skyscrapering"] += 1
@@ -1623,7 +1623,7 @@ class Sudoku_main_work:
                                 if str(type(self.sudoku_table[f][meet_twice_in_row_c[1][0][1]]))=="<class 'list'>":
                                     if k in self.sudoku_table[f][meet_twice_in_row_c[1][0][1]]:
                                         self.sudoku_table[f][meet_twice_in_row_c[1][0][1]].remove(int(k))
-                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_row_c(meet_twice_in_row_c[1][0][1])}{f+1} (due to x-winging)")
+                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_row_c(meet_twice_in_row_c[1][0][1])}{f+1} (due to skyscraping)")
                                         self.action += 1
                                         table_changed, self.ch_gl, self.moderate = True, True, True
                                         self.uses["Skyscrapering"] += 1
@@ -1631,7 +1631,7 @@ class Sudoku_main_work:
                                 if str(type(self.sudoku_table[g][meet_twice_in_row_c[0][0][1]]))=="<class 'list'>":
                                     if k in self.sudoku_table[g][meet_twice_in_row_c[0][0][1]]:
                                         self.sudoku_table[g][meet_twice_in_row_c[0][0][1]].remove(int(k))
-                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_row_c(meet_twice_in_row_c[0][0][1])}{g+1} (due to x-winging)")
+                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_row_c(meet_twice_in_row_c[0][0][1])}{g+1} (due to skyscraping)")
                                         self.action += 1
                                         table_changed, self.ch_gl, self.moderate = True, True, True
                                         self.uses["Skyscrapering"] += 1
