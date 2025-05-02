@@ -17,99 +17,6 @@ def are_sync(a, b, c):
     else:
         return False
 
-def are_sync_ext(a, b, c, d, e, f, t):
-    if a[t] == c[t] and a[t] != e[t] and a[t] != f[t]:
-        if b[t] == e[t] and b[t] != d[t] and d[0] == f[t]:
-            return True
-        elif b[t] == f[t] and b[t] != d[t] and d[t] == e[t]:
-            return True
-        else:
-            return False
-    elif a[t] == e[t] and a[t] != c[t] and a[t] != d[t]:
-        if b[t] == c[t] and b[t] != f[t] and d[t] == f[t]:
-            return True
-        elif b[t] == d[t] and b[t] != f[t] and c[t] == f[t]:
-            return True
-        else:
-            return False
-    elif a[t] == d[t] and a[t] != e[t] and a[t] != f[t]:
-        if b[t] == f[t] and c[t] != f[t] and c[t] == e[t]:
-            return True
-        else:
-            return False
-    elif a[t] == f[t] and a[t] != e[t] and a[0] != f[t]:
-        if b[t] == d[t] and c[t] != f[t] and c[t] == e[t]:
-            return True
-        else:
-            return False
-    else:
-        return False
-
-def extract_coordinate_lines(col):
-    rows = []
-    columns = []
-    for i in col:
-        if i[0][0] not in rows:
-            rows.append(i[0][0])
-        if i[1][0] not in rows:
-            rows.append(i[1][0])
-        if i[0][1] not in columns:
-            columns.append(i[0][1])
-        if i[1][1] not in columns:
-            columns.append(i[1][1])
-    return [sorted(rows), sorted(columns)]
-
-
-def update_up_for_x_winging(col, t):
-    ncol = []
-    if len(col) > 1:
-        while True:
-            extr_coords = extract_coordinate_lines(col)
-            lines_more_than_one = []
-            for line in extr_coords[1-t]:
-                num_of_meet = 0
-                a_lines = []
-                for alt_line in extr_coords[t]:
-                    for i in col:
-                        for ij in i:
-                            if ij[1-t] == line and ij[t] == alt_line:
-                                num_of_meet += 1
-                                a_lines.append(alt_line)
-                if num_of_meet > 1:
-                    lines_more_than_one.append(a_lines)
-                elif num_of_meet == 1:
-                    for k in col:
-                        if k[0][1-t] == line or k[1][1-t] == line:
-                            col.remove(k)
-            if len(lines_more_than_one) == len(extr_coords[1-t]):
-                break
-    if len(col) > 3:
-        for colu in range(len(col)-1):
-            for cold in range(colu+1, len(col)):
-                if col[colu][0][1-t] == col[cold][0][1-t] and col[colu][1][1-t] == col[cold][1][1-t]:
-                    lines_num_of_meets = []
-                    for line in [col[colu][0][1-t], col[colu][0][1-t]]:
-                        num_of_meets = 0
-                        for alt_line in extr_coords[t]:
-                            for i in col:
-                                for ij in i:
-                                    if ij[1-t] == line and ij[t] == alt_line:
-                                        num_of_meets += 1
-                        lines_num_of_meets.append(num_of_meets)
-                    if (lines_num_of_meets[0] == 2 and lines_num_of_meets[1] >= 2) or (lines_num_of_meets[0] >= 2 and lines_num_of_meets[1] == 2):
-                        ncol.append([col[colu], col[cold]])
-        unappended = col
-        for hj in ncol:
-            if hj[0] in unappended:
-                unappended.remove(hj[0])
-            if hj[1] in unappended:
-                unappended.remove(hj[1])
-        if len(unappended) > 0:
-            ncol.append(unappended)
-    else:
-        ncol = [col]
-    return ncol
-
 class Sudoku_main_work:
     def __init__(self):
         self.starting_widgets_solving_mode()
@@ -182,9 +89,9 @@ class Sudoku_main_work:
                          "Naked Quint": 0, "Hidden Quint": 0,
                          "Naked Pair": 0, "Hidden Pair": 0,
                          "Naked Triplet": 0, "Hidden Triplet": 0,
-                         "Blockades": 0, "X-wings": 0, "Y-wings": 0,
+                         "Blockades": 0, "X-wing": 0, "Y-wings": 0,
                          "Swordfishing": 0, "Jellyfishing": 0,
-                         "Starfishing": 0, "Skyscrapering": 0, "XYZ-wings": 0}
+                         "Starfishing": 0, "Skyscrapering": 0, "XYZ-wings": 0, "Coloring": 0}
             self.list_of_changes_solving_mode = []
             self.action = 1
             self.create_empty_sudoku_table()
@@ -256,6 +163,8 @@ class Sudoku_main_work:
                         if allowed_h:
                             self.solved = False
                             self.sudoku_solve_branched(gen)
+                            if self.solvability == "impossible multiple":
+                                self.solvability = "impossible"
                         else:
                             self.solved = True
                             break
@@ -317,7 +226,7 @@ class Sudoku_main_work:
             if self.solvability == "possible":
                 self.y_wing()
             if self.solvability == "possible":
-                self.sword_fish_ext()
+                self.swordfish()
             if self.solvability == "possible":
                 self.jellyfish()
             if self.solvability == "possible":
@@ -326,11 +235,14 @@ class Sudoku_main_work:
                 self.pairs_and_triples()
             if self.solvability == "possible":
                 self.quads_and_quints()
-
+            if self.solvability == "possible":
+                self.skyscrapers()
+            if self.solvability == "possible":
+                self.coloring()
 
     def sudoku_solve_branched(self, g):
         self.branches_limit_countdown += 1
-        if ((self.called_by == "build_cell_by_cell" or self.called_by == "build_cell_by_cell_alt") and self.branches_limit_countdown < 50 and g < 4) or ((self.called_by == "__call__" or self.called_by == "sudoku_solve_branched") and self.branches_limit_countdown < 100 and g < 5):
+        if self.solvability != "impossible multiple" and ((self.called_by == "build_cell_by_cell" or self.called_by == "build_cell_by_cell_alt") and self.branches_limit_countdown < 50 and g < 4) or ((self.called_by == "__call__" or self.called_by == "sudoku_solve_branched") and self.branches_limit_countdown < 10000):
             if g == 0:
                 self.called_by_on_first_gen = self.called_by
             if self.solvability == "possible":
@@ -343,21 +255,27 @@ class Sudoku_main_work:
                             self.solve_sudoku(k, copy.deepcopy(self.sudoku_table[k//9][k%9])[i], gen = g+1)
                             if self.solved:
                                 successes.append([k//9, k%9, sudoku_table_original[k//9][k%9][i]])
-                            self.solvability, self.solved = "possible", False
+                            if self.solvability != "impossible multiple":
+                                self.solvability, self.solved = "possible", False
+                            else:
+                                break
                         self.sudoku_table = copy.deepcopy(sudoku_table_original)
                         break
-                if len(successes) == 1:
-                    if g == 0:
-                        self.called_by = self.called_by_on_first_gen
-                    self.asign_cell_num(successes[0][0], successes[0][1], successes[0][2], "as a one possible branched solution")
-                    self.ch_gl = True
-                    self.comprehanded = True
-                elif len(successes) > 1 or (len(successes) != 1 and g == 0):
-                    self.solvability = "impossible"
+                if self.solvability != "impossible multiple":
+                    if len(successes) == 1:
+                        if g == 0:
+                            self.called_by = self.called_by_on_first_gen
+                        self.asign_cell_num(successes[0][0], successes[0][1], successes[0][2], "as a one possible branched solution")
+                        self.ch_gl = True
+                        self.comprehanded = True
+                    elif len(successes) != 1:
+                        self.solvability = "impossible"
+                        if len(successes) > 1:
+                            self.solvability = "impossible multiple"
             else:
                 self.solved = False
         else:
-            self.solvability = "impossible"
+            pass
                 
                     
     def look_for_one_possible_number(self):
@@ -1138,7 +1056,125 @@ class Sudoku_main_work:
                                     table_changed = self.ch_gl = self.moderate = True
                                     self.uses["Naked Quint"] += 1
 
-    def sword_fish_ext(self):
+    def coloring(self):
+        table_changed = True
+        while table_changed and self.solvability == "possible":
+            table_changed = False     
+            for k in range(1, 10):
+                bivalue_cells = [
+                    (r, c) for r, c in product(range(9), repeat=2)
+                    if isinstance(self.sudoku_table[r][c], list) 
+                    and len(self.sudoku_table[r][c]) == 2 
+                    and k in self.sudoku_table[r][c]
+                ]
+                
+                if len(bivalue_cells) < 2:
+                    continue
+                
+                graph = collections.defaultdict(list)
+                for (r1, c1), (r2, c2) in combinations(bivalue_cells, 2):
+                    if self._are_strongly_linked(r1, c1, r2, c2, k):
+                        graph[(r1, c1)].append((r2, c2))
+                        graph[(r2, c2)].append((r1, c1))
+
+                if not graph:
+                    continue
+
+
+                color = {}
+                chains = [] 
+                for cell in bivalue_cells:
+                    if cell not in color:
+                        queue = [cell]
+                        color[cell] = 'A'
+                        current_chain = [cell]
+                        while queue:
+                            current = queue.pop(0)
+                            for neighbor in graph.get(current, []):
+                                if neighbor not in color:
+                                    color[neighbor] = 'B' if color[current] == 'A' else 'A'
+                                    queue.append(neighbor)
+                                    current_chain.append(neighbor)
+                        chains.append(current_chain)
+
+                for chain in chains:
+                    color_conflict = False
+                    conflict_color = None
+                    for (r1, c1), (r2, c2) in combinations(chain, 2):
+                        if color[(r1, c1)] == color[(r2, c2)]:
+                            if (r1 == r2 or c1 == c2 or (r1 // 3 == r2 // 3 and c1 // 3 == c2 // 3)):
+                                color_conflict = True
+                                conflict_color = color[(r1, c1)]
+                                break
+
+                    if color_conflict:
+                        for (r, c) in chain:
+                            if color[(r, c)] == conflict_color and k in self.sudoku_table[r][c]:
+                                self.sudoku_table[r][c].remove(k)
+                                self.list_of_changes_solving_mode.append(
+                                    f"#{self.action} --- Coloring: removed {k} from {self.letter_for_collumn(c)}{r+1} (color conflict in chain)"
+                                )
+                                self.action += 1
+                                table_changed = True
+                                self.uses["Coloring"] += 1
+
+                for r, c in product(range(9), repeat=2):
+                    if (r, c) in color:
+                        continue
+                    if not isinstance(self.sudoku_table[r][c], list) or k not in self.sudoku_table[r][c]:
+                        continue
+                    
+                    for chain in chains:
+                        seen_colors = set()
+                        for (r2, c2) in chain:
+                            if k in self.sudoku_table[r2][c2]:
+                                if r == r2 or c == c2 or (r // 3 == r2 // 3 and c // 3 == c2 // 3):
+                                    seen_colors.add(color[(r2, c2)])
+                        
+                        if len(seen_colors) == 2:
+                            self.sudoku_table[r][c].remove(k)
+                            self.list_of_changes_solving_mode.append(
+                                f"#{self.action} --- Coloring: removed {k} from {self.letter_for_collumn(c)}{r+1} (sees both colors in a single chain)"
+                            )
+                            self.action += 1
+                            table_changed = True
+                            self.uses["Coloring"] += 1
+                            break 
+
+    def _are_strongly_linked(self, r1, c1, r2, c2, k):
+        if r1 == r2:
+            other_cells = [
+                (r1, c) for c in range(9)
+                if isinstance(self.sudoku_table[r1][c], list)
+                and k in self.sudoku_table[r1][c]
+                and (r1, c) not in {(r1, c1), (r1, c2)}
+            ]
+            if not other_cells:
+                return True
+        if c1 == c2:
+            other_cells = [
+                (r, c1) for r in range(9)
+                if isinstance(self.sudoku_table[r][c1], list)
+                and k in self.sudoku_table[r][c1]
+                and (r, c1) not in {(r1, c1), (r2, c1)}
+            ]
+            if not other_cells:
+                return True
+        if (r1 // 3 == r2 // 3) and (c1 // 3 == c2 // 3):
+            block_r = r1 // 3 * 3
+            block_c = c1 // 3 * 3
+            other_cells = [
+                (block_r + i, block_c + j)
+                for i in range(3) for j in range(3)
+                if isinstance(self.sudoku_table[block_r + i][block_c + j], list)
+                and k in self.sudoku_table[block_r + i][block_c + j]
+                and (block_r + i, block_c + j) not in {(r1, c1), (r2, c2)}
+            ]
+            if not other_cells:
+                return True
+        return False
+                            
+    def swordfish(self):
         table_changed = True
         while table_changed and self.solvability == "possible":
             table_changed = False
@@ -1163,13 +1199,12 @@ class Sudoku_main_work:
                     if len(meet_thrice_in_column_c) >= 3 and num_is_valid_for_method:
                         allowed_b = False
                         for lu, lm, ld in ((lu, lm, ld) for lu in range(len(meet_thrice_in_column_c)-2) for lm in range(lu + 1, len(meet_thrice_in_column_c)-1) for ld in range(lm + 1, len(meet_thrice_in_column_c))):
-                            if len(meet_thrice_in_column_c[lu]) == 3 or len(meet_thrice_in_column_c[lm]) == 3 or len(meet_thrice_in_column_c[ld]) == 3:
-                                rows_k = sorted(set([row[0] for row in meet_thrice_in_column_c[lu] if row] + [row[0] for row in meet_thrice_in_column_c[lm] if row] + [row[0] for row in meet_thrice_in_column_c[ld] if row]))
-                                columns_k = sorted(set([row[1] for row in meet_thrice_in_column_c[lu] if row] + [row[1] for row in meet_thrice_in_column_c[lm] if row] + [row[1] for row in meet_thrice_in_column_c[ld] if row]))
-                                if len(rows_k)==3 and len(columns_k)==3:
-                                    if len(sorted(set([a//3 for a in rows_k])))*len(sorted(set([a//3 for a in columns_k]))) >= 4:
-                                        allowed_b = True
-                                        break
+                            rows_k = sorted(set([row[0] for row in meet_thrice_in_column_c[lu] if row] + [row[0] for row in meet_thrice_in_column_c[lm] if row] + [row[0] for row in meet_thrice_in_column_c[ld] if row]))
+                            columns_k = sorted(set([row[1] for row in meet_thrice_in_column_c[lu] if row] + [row[1] for row in meet_thrice_in_column_c[lm] if row] + [row[1] for row in meet_thrice_in_column_c[ld] if row]))
+                            if len(rows_k)==3 and len(columns_k)==3:
+                                if len(sorted(set([a//3 for a in rows_k])))*len(sorted(set([a//3 for a in columns_k]))) >= 3:
+                                    allowed_b = True
+                                    break
                         if allowed_b:
                             allowed = True
                             for u in list(set(list(range(len(meet_thrice_in_column_c)))) - set([lu, lm, ld])):
@@ -1215,13 +1250,12 @@ class Sudoku_main_work:
                     if len(meet_thrice_in_row_c) >= 3 and num_is_valid_for_method_alt:
                         allowed_b = False
                         for lu, lm, ld in ((lu, lm, ld) for lu in range(len(meet_thrice_in_row_c)-2) for lm in range(lu + 1, len(meet_thrice_in_row_c)-1) for ld in range(lm + 1, len(meet_thrice_in_row_c))):
-                            if len(meet_thrice_in_row_c[lu]) == 3 or len(meet_thrice_in_row_c[lm]) == 3 or len(meet_thrice_in_row_c[ld]) == 3:
-                                rows_k = sorted(set([row[0] for row in meet_thrice_in_row_c[lu] if row] + [row[0] for row in meet_thrice_in_row_c[lm] if row] + [row[0] for row in meet_thrice_in_row_c[ld] if row]))
-                                columns_k = sorted(set([row[1] for row in meet_thrice_in_row_c[lu] if row] + [row[1] for row in meet_thrice_in_row_c[lm] if row] + [row[1] for row in meet_thrice_in_row_c[ld] if row]))
-                                if len(rows_k)==3 and len(columns_k)==3:
-                                    if len(sorted(set([a//3 for a in rows_k])))*len(sorted(set([a//3 for a in columns_k]))) >= 4:
-                                        allowed_b = True
-                                        break
+                            rows_k = sorted(set([row[0] for row in meet_thrice_in_row_c[lu] if row] + [row[0] for row in meet_thrice_in_row_c[lm] if row] + [row[0] for row in meet_thrice_in_row_c[ld] if row]))
+                            columns_k = sorted(set([row[1] for row in meet_thrice_in_row_c[lu] if row] + [row[1] for row in meet_thrice_in_row_c[lm] if row] + [row[1] for row in meet_thrice_in_row_c[ld] if row]))
+                            if len(rows_k)==3 and len(columns_k)==3:
+                                if len(sorted(set([a//3 for a in rows_k])))*len(sorted(set([a//3 for a in columns_k]))) >= 3:
+                                    allowed_b = True
+                                    break
                         if allowed_b:
                             allowed = True
                             for u in list(set(list(range(len(meet_thrice_in_row_c)))) - set([lu, lm, ld])):
@@ -1251,6 +1285,101 @@ class Sudoku_main_work:
                                             self.action += 1
                                             table_changed, self.ch_gl, self.moderate = True, True, True
                                             self.uses["Swordfishing"] += 1
+
+    def x_wing(self):
+        table_changed = True
+        while table_changed and self.solvability == "possible":
+            table_changed = False
+            for k in range(1, 10):
+                num_is_valid_for_method = True
+                meet_thrice_in_column_c = []
+                num_is_valid_for_method_alt = True
+                meet_thrice_in_row_c = []
+                if num_is_valid_for_method:
+                    for c in range(9):
+                        k_times = []
+                        for r in range(9):
+                            if str(type(self.sudoku_table[r][c]))=="<class 'list'>":
+                                if k in self.sudoku_table[r][c]:
+                                    k_times.append(r)
+                        if len(k_times) == 2:
+                            meet_thrice_in_column_c.append([[k_times[0], c], [k_times[1], c]])
+                        elif len(k_times) == 1:
+                            num_is_valid_for_method = False
+                    if len(meet_thrice_in_column_c) >= 2 and num_is_valid_for_method:
+                        allowed_b = False
+                        for lu, ld in ((lu, ld) for lu in range(len(meet_thrice_in_column_c)-1) for ld in range(lu + 1, len(meet_thrice_in_column_c))):
+                            rows_k = sorted(set([row[0] for row in meet_thrice_in_column_c[lu] if row] + [row[0] for row in meet_thrice_in_column_c[ld] if row]))
+                            columns_k = sorted(set([row[1] for row in meet_thrice_in_column_c[lu] if row] + [row[1] for row in meet_thrice_in_column_c[ld] if row]))
+                            if len(rows_k)==2 and len(columns_k)==2:
+                                if len(sorted(set([a//3 for a in rows_k])))*len(sorted(set([a//3 for a in columns_k]))) >= 2:
+                                    allowed_b = True
+                                    break
+                        if allowed_b:
+                            allowed = True
+                            for u in list(set(list(range(len(meet_thrice_in_column_c)))) - set([lu, ld])):
+                                if list(set([row[0] for row in meet_thrice_in_column_c[u] if row]) - set(rows_k)) == 0:
+                                    allowed = False
+                                    break
+                            if allowed:
+                                for g in range(9):
+                                    if str(type(self.sudoku_table[rows_k[0]][g]))=="<class 'list'>" and g not in columns_k:
+                                        if k in self.sudoku_table[rows_k[0]][g]:
+                                            self.sudoku_table[rows_k[0]][g].remove(int(k))
+                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(g)}{rows_k[0]+1} (due to X-wing in rows)")
+                                            self.action += 1
+                                            table_changed, self.ch_gl, self.moderate = True, True, True
+                                            self.uses["X-wing"] += 1
+                                    if str(type(self.sudoku_table[rows_k[1]][g]))=="<class 'list'>" and g not in columns_k:
+                                        if k in self.sudoku_table[rows_k[1]][g]:
+                                            self.sudoku_table[rows_k[1]][g].remove(int(k))
+                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(g)}{rows_k[1]+1} (due to X-wing in rows)")
+                                            self.action += 1
+                                            table_changed, self.ch_gl, self.moderate = True, True, True
+                                            self.uses["X-wing"] += 1
+                if num_is_valid_for_method_alt:
+                    for r in range(9):
+                        k_times = []
+                        for c in range(9):
+                            if str(type(self.sudoku_table[r][c]))=="<class 'list'>":
+                                if k in self.sudoku_table[r][c]:
+                                    k_times.append(c)
+                        if len(k_times) == 2:
+                            meet_thrice_in_row_c.append([[r, k_times[0]], [r, k_times[1], c]])
+                        elif len(k_times) == 1:
+                            num_is_valid_for_method_alt = False
+                    if len(meet_thrice_in_row_c) >= 2 and num_is_valid_for_method_alt:
+                        allowed_b = False
+                        for lu, ld in ((lu, ld) for lu in range(len(meet_thrice_in_row_c)-1) for ld in range(lu + 1, len(meet_thrice_in_row_c))):
+                            rows_k = sorted(set([row[0] for row in meet_thrice_in_row_c[lu] if row] + [row[0] for row in meet_thrice_in_row_c[ld] if row]))
+                            columns_k = sorted(set([row[1] for row in meet_thrice_in_row_c[lu] if row] + [row[1] for row in meet_thrice_in_row_c[ld] if row]))
+                            if len(rows_k)==2 and len(columns_k)==2:
+                                if len(sorted(set([a//3 for a in rows_k])))*len(sorted(set([a//3 for a in columns_k]))) >= 2:
+                                    allowed_b = True
+                                    break
+                        if allowed_b:
+                            allowed = True
+                            for u in list(set(list(range(len(meet_thrice_in_row_c)))) - set([lu, ld])):
+                                if list(set([row[1] for row in meet_thrice_in_row_c[u] if row]) - set(columns_k)) == 0:
+                                    allowed = False
+                                    break
+                            if allowed:
+                                for g in range(9):
+                                    if str(type(self.sudoku_table[g][columns_k[0]]))=="<class 'list'>" and g not in rows_k:
+                                        if k in self.sudoku_table[g][columns_k[0]]:
+                                            self.sudoku_table[g][columns_k[0]].remove(int(k))
+                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(columns_k[0])}{g+1} (due to X-wing in columns)")
+                                            self.action += 1
+                                            table_changed, self.ch_gl, self.moderate = True, True, True
+                                            self.uses["X-wing"] += 1
+                                    if str(type(self.sudoku_table[g][columns_k[1]]))=="<class 'list'>" and g not in rows_k:
+                                        if k in self.sudoku_table[g][columns_k[1]]:
+                                            self.sudoku_table[g][columns_k[1]].remove(int(k))
+                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(columns_k[1])}{g+1} (due to X-wing in columns)")
+                                            self.action += 1
+                                            table_changed, self.ch_gl, self.moderate = True, True, True
+                                            self.uses["X-wing"] += 1
+
 
     def jellyfish(self):
         table_changed = True
@@ -1468,7 +1597,7 @@ class Sudoku_main_work:
                                 if k in self.sudoku_table[r][c]:
                                     k_times.append(c)
                         if len(k_times) == 5:
-                            meet_four_t_in_row_c.append([[r, k_times[0]], [r, k_times[1]], [r, k_times[2]], [r, k_times[3]], [r, k_times[3]]])
+                            meet_four_t_in_row_c.append([[r, k_times[0]], [r, k_times[1]], [r, k_times[2]], [r, k_times[3]], [r, k_times[4]]])
                         elif len(k_times) == 4:
                             meet_four_t_in_row_c.append([[r, k_times[0]], [r, k_times[1]], [r, k_times[2]], [r, k_times[3]]])
                         elif len(k_times) == 3:
@@ -1530,7 +1659,7 @@ class Sudoku_main_work:
                                             table_changed, self.ch_gl, self.moderate = True, True, True
                                             self.uses["Starfishing"] += 1
 
-    def x_wing(self):
+    def skyscrapers(self):
         table_changed = True
         while table_changed and self.solvability == "possible":
             table_changed = False
@@ -1550,7 +1679,6 @@ class Sudoku_main_work:
                             meet_twice_in_column_c.append([[k_times[0], c], [k_times[1], c]])
                         elif len(k_times) == 1:
                             num_is_valid_for_method = False
-                    meet_twice_in_column_k = update_up_for_x_winging(meet_twice_in_column_c, 1)
                 if len(meet_twice_in_column_c) == 2:
                     if meet_twice_in_column_c[0][0][1]//3 != meet_twice_in_column_c[1][0][1]//3 and meet_twice_in_column_c[0][0][0]//3 != meet_twice_in_column_c[0][1][0]//3 and meet_twice_in_column_c[1][0][0]//3 != meet_twice_in_column_c[1][1][0]//3:
                         if meet_twice_in_column_c[0][0][0] == meet_twice_in_column_c[1][0][0] and meet_twice_in_column_c[0][1][0] != meet_twice_in_column_c[1][1][0] and meet_twice_in_column_c[0][1][0]//3 == meet_twice_in_column_c[1][1][0]//3:
@@ -1558,7 +1686,7 @@ class Sudoku_main_work:
                                 if str(type(self.sudoku_table[meet_twice_in_column_c[1][1][0]][f]))=="<class 'list'>":
                                     if k in self.sudoku_table[meet_twice_in_column_c[1][1][0]][f]:
                                         self.sudoku_table[meet_twice_in_column_c[1][1][0]][f].remove(int(k))
-                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn_c(f)}{meet_twice_in_column[1][1][0]+1} (due to x-winging)")
+                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(f)}{meet_twice_in_column_c[1][1][0]+1} (due to skyscraping)")
                                         self.action += 1
                                         table_changed, self.ch_gl, self.moderate = True, True, True
                                         self.uses["Skyscrapering"] += 1
@@ -1566,7 +1694,7 @@ class Sudoku_main_work:
                                 if str(type(self.sudoku_table[meet_twice_in_column_c[0][1][0]][g]))=="<class 'list'>":
                                     if k in self.sudoku_table[meet_twice_in_column_c[0][1][0]][g]:
                                         self.sudoku_table[meet_twice_in_column_c[0][1][0]][g].remove(int(k))
-                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn_c(g)}{meet_twice_in_column[0][1][0]+1} (due to x-winging)")
+                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(g)}{meet_twice_in_column_c[0][1][0]+1} (due to skyscraping)")
                                         self.action += 1
                                         table_changed, self.ch_gl, self.moderate = True, True, True
                                         self.uses["Skyscrapering"] += 1
@@ -1575,7 +1703,7 @@ class Sudoku_main_work:
                                 if str(type(self.sudoku_table[meet_twice_in_column_c[1][0][0]][f]))=="<class 'list'>":
                                     if k in self.sudoku_table[meet_twice_in_column_c[1][0][0]][f]:
                                         self.sudoku_table[meet_twice_in_column_c[1][0][0]][f].remove(int(k))
-                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn_c(f)}{meet_twice_in_column[1][0][0]+1} (due to x-winging)")
+                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(f)}{meet_twice_in_column_c[1][0][0]+1} (due to skyscraping)")
                                         self.action += 1
                                         table_changed, self.ch_gl, self.moderate = True, True, True
                                         self.uses["Skyscrapering"] += 1
@@ -1583,66 +1711,10 @@ class Sudoku_main_work:
                                 if str(type(self.sudoku_table[meet_twice_in_column_c[0][0][0]][g]))=="<class 'list'>":
                                     if k in self.sudoku_table[meet_twice_in_column_c[0][0][0]][g]:
                                         self.sudoku_table[meet_twice_in_column_c[0][0][0]][g].remove(int(k))
-                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn_c(g)}{meet_twice_in_column[0][0][0]+1} (due to x-winging)")
+                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(g)}{meet_twice_in_column_c[0][0][0]+1} (due to skyscraping)")
                                         self.action += 1
                                         table_changed, self.ch_gl, self.moderate = True, True, True
                                         self.uses["Skyscrapering"] += 1    
-                for meet_twice_in_column in meet_twice_in_column_k:
-                    if num_is_valid_for_method and len(meet_twice_in_column) == 2:
-                        if meet_twice_in_column[0][0][0] == meet_twice_in_column[1][0][0] and meet_twice_in_column[0][1][0] == meet_twice_in_column[1][1][0]:
-                            if not self.check_if_in_the_same_block(meet_twice_in_column[0][0], meet_twice_in_column[0][1], meet_twice_in_column[1][0], meet_twice_in_column[1][1]):
-                                for g in range(9):
-                                    if str(type(self.sudoku_table[meet_twice_in_column[0][0][0]][g]))=="<class 'list'>" and g not in [meet_twice_in_column[0][0][1], meet_twice_in_column[1][0][1]]:
-                                        if k in self.sudoku_table[meet_twice_in_column[0][0][0]][g]:
-                                            self.sudoku_table[meet_twice_in_column[0][0][0]][g].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(g)}{meet_twice_in_column[0][0][0]+1} (due to x-winging)")
-                                            self.action += 1
-                                            table_changed, self.ch_gl, self.moderate = True, True, True
-                                            self.uses["X-wings"] += 1
-                                    if str(type(self.sudoku_table[meet_twice_in_column[0][1][0]][g]))=="<class 'list'>" and g not in [meet_twice_in_column[0][1][1], meet_twice_in_column[1][1][1]]:
-                                        if k in self.sudoku_table[meet_twice_in_column[0][1][0]][g]:
-                                            self.sudoku_table[meet_twice_in_column[0][1][0]][g].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(g)}{meet_twice_in_column[0][1][0]+1} (due to x-winging)")
-                                            self.action += 1
-                                            table_changed, self.ch_gl, self.moderate = True, True, True
-                                            self.uses["X-wings"] += 1
-                    elif num_is_valid_for_method and len(meet_twice_in_column) == 3:
-                        if are_sync_ext(meet_twice_in_column[0][0], meet_twice_in_column[0][1], meet_twice_in_column[1][0], meet_twice_in_column[1][1], meet_twice_in_column[2][0], meet_twice_in_column[2][1], 0):
-                            extr_rows = []
-                            extr_columns = []
-                            for cell in [meet_twice_in_column[0][0], meet_twice_in_column[0][1], meet_twice_in_column[1][0], meet_twice_in_column[1][1], meet_twice_in_column[2][0], meet_twice_in_column[2][1]]:
-                                if cell[0] not in extr_rows:
-                                    extr_rows.append(cell[0])
-                                if cell[1] not in extr_columns:
-                                    extr_columns.append(cell[1])
-                            try:
-                                extr_rows = sorted(extr_rows)
-                                extr_columns = sorted(extr_columns)
-                            except:
-                                pass
-                            if not self.check_if_in_the_same_block_ext(extr_rows, extr_columns):
-                                for g in range(9):
-                                    if str(type(self.sudoku_table[extr_rows[0]][g]))=="<class 'list'>" and g not in [extr_columns[0], extr_columns[1], extr_columns[2]]:
-                                        if k in self.sudoku_table[extr_rows[0]][g]:
-                                            self.sudoku_table[extr_rows[0]][g].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(g)}{extr_rows[0]+1} (due to swordfishing in rows #{extr_rows[0]+1}, {extr_rows[1]+1} & {extr_rows[2]+1})")
-                                            self.action += 1
-                                            table_changed, self.ch_gl, self.moderate = True, True, True
-                                            self.uses["Swordfishing"] += 1
-                                    if str(type(self.sudoku_table[extr_rows[1]][g]))=="<class 'list'>" and g not in [extr_columns[0], extr_columns[1], extr_columns[2]]:
-                                        if k in self.sudoku_table[extr_rows[1]][g]:
-                                            self.sudoku_table[extr_rows[1]][g].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(g)}{extr_rows[1]+1} (due to swordfishing in rows #{extr_rows[0]+1}, {extr_rows[1]+1} & {extr_rows[2]+1})")
-                                            self.action += 1
-                                            table_changed, self.ch_gl, self.moderate = True, True, True
-                                            self.uses["Swordfishing"] += 1
-                                    if str(type(self.sudoku_table[extr_rows[2]][g]))=="<class 'list'>" and g not in [extr_columns[0], extr_columns[1], extr_columns[2]]:
-                                        if k in self.sudoku_table[extr_rows[2]][g]:
-                                            self.sudoku_table[extr_rows[2]][g].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(g)}{extr_rows[2]+1} (due to swordfishing in rows #{extr_rows[0]+1}, {extr_rows[1]+1} & {extr_rows[2]+1})")
-                                            self.action += 1
-                                            table_changed, self.ch_gl, self.moderate = True, True, True
-                                            self.uses["Swordfishing"] += 1
                 if num_is_valid_for_method_alt:
                     for r in range(9):
                         k_times = []
@@ -1654,7 +1726,6 @@ class Sudoku_main_work:
                             meet_twice_in_row_c.append([[r, k_times[0]], [r, k_times[1]]])
                         elif len(k_times) == 1:
                             num_is_valid_for_method_alt = False
-                    meet_twice_in_row_k = update_up_for_x_winging(meet_twice_in_row_c, 0)
                 if len(meet_twice_in_row_c) == 2:
                     if meet_twice_in_row_c[0][0][0]//3 != meet_twice_in_row_c[1][0][0]//3 and meet_twice_in_row_c[0][0][1]//3 != meet_twice_in_row_c[0][1][1]//3 and meet_twice_in_row_c[1][0][1]//3 != meet_twice_in_row_c[1][1][1]//3:
                         if meet_twice_in_row_c[0][0][1] == meet_twice_in_row_c[1][0][1] and meet_twice_in_row_c[0][1][1] != meet_twice_in_row_c[1][1][1] and meet_twice_in_row_c[0][1][1]//3 == meet_twice_in_row_c[1][1][1]//3:
@@ -1662,7 +1733,7 @@ class Sudoku_main_work:
                                 if str(type(self.sudoku_table[f][meet_twice_in_row_c[1][1][1]]))=="<class 'list'>":
                                     if k in self.sudoku_table[f][meet_twice_in_row_c[1][1][1]]:
                                         self.sudoku_table[f][meet_twice_in_row_c[1][1][1]].remove(int(k))
-                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(meet_twice_in_row_c[1][1][1])}{f+1} (due to x-winging)")
+                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(meet_twice_in_row_c[1][1][1])}{f+1} (due to skyscraping)")
                                         self.action += 1
                                         table_changed, self.ch_gl, self.moderate = True, True, True
                                         self.uses["Skyscrapering"] += 1
@@ -1670,7 +1741,7 @@ class Sudoku_main_work:
                                 if str(type(self.sudoku_table[g][meet_twice_in_row_c[0][1][1]]))=="<class 'list'>":
                                     if k in self.sudoku_table[g][meet_twice_in_row_c[0][1][1]]:
                                         self.sudoku_table[g][meet_twice_in_row_c[0][1][1]].remove(int(k))
-                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(meet_twice_in_row_c[0][1][1])}{g+1} (due to x-winging)")
+                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(meet_twice_in_row_c[0][1][1])}{g+1} (due to skyscraping)")
                                         self.action += 1
                                         table_changed, self.ch_gl, self.moderate = True, True, True
                                         self.uses["Skyscrapering"] += 1
@@ -1679,7 +1750,7 @@ class Sudoku_main_work:
                                 if str(type(self.sudoku_table[f][meet_twice_in_row_c[1][0][1]]))=="<class 'list'>":
                                     if k in self.sudoku_table[f][meet_twice_in_row_c[1][0][1]]:
                                         self.sudoku_table[f][meet_twice_in_row_c[1][0][1]].remove(int(k))
-                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_row_c(meet_twice_in_row_c[1][0][1])}{f+1} (due to x-winging)")
+                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_row_c(meet_twice_in_row_c[1][0][1])}{f+1} (due to skyscraping)")
                                         self.action += 1
                                         table_changed, self.ch_gl, self.moderate = True, True, True
                                         self.uses["Skyscrapering"] += 1
@@ -1687,66 +1758,11 @@ class Sudoku_main_work:
                                 if str(type(self.sudoku_table[g][meet_twice_in_row_c[0][0][1]]))=="<class 'list'>":
                                     if k in self.sudoku_table[g][meet_twice_in_row_c[0][0][1]]:
                                         self.sudoku_table[g][meet_twice_in_row_c[0][0][1]].remove(int(k))
-                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_row_c(meet_twice_in_row_c[0][0][1])}{g+1} (due to x-winging)")
+                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_row_c(meet_twice_in_row_c[0][0][1])}{g+1} (due to skyscraping)")
                                         self.action += 1
                                         table_changed, self.ch_gl, self.moderate = True, True, True
                                         self.uses["Skyscrapering"] += 1
-                for meet_twice_in_row in meet_twice_in_row_k:
-                    if num_is_valid_for_method_alt and len(meet_twice_in_row) == 2:
-                        if meet_twice_in_row[0][0][1] == meet_twice_in_row[1][0][1] and meet_twice_in_row[0][1][1] == meet_twice_in_row[1][1][1]:
-                            if not self.check_if_in_the_same_block(meet_twice_in_row[0][0], meet_twice_in_row[0][1], meet_twice_in_row[1][0], meet_twice_in_row[1][1]):
-                                for g in range(9):
-                                    if str(type(self.sudoku_table[g][meet_twice_in_row[0][0][1]]))=="<class 'list'>" and g not in [meet_twice_in_row[0][0][0], meet_twice_in_row[1][0][0]]:
-                                        if k in self.sudoku_table[g][meet_twice_in_row[0][0][1]]:
-                                            self.sudoku_table[g][meet_twice_in_row[0][0][1]].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(meet_twice_in_row[0][0][1])}{g+1} (due to x-winging)")
-                                            self.action += 1
-                                            table_changed, self.ch_gl, self.moderate = True, True, True
-                                            self.uses["X-wings"] += 1
-                                    if str(type(self.sudoku_table[g][meet_twice_in_row[0][1][1]]))=="<class 'list'>" and g not in [meet_twice_in_row[0][1][0], meet_twice_in_row[1][1][0]]:
-                                        if k in self.sudoku_table[g][meet_twice_in_row[0][1][1]]:
-                                            self.sudoku_table[g][meet_twice_in_row[0][1][1]].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(meet_twice_in_row[0][1][1])}{g+1} (due to x-winging)")
-                                            self.action += 1
-                                            table_changed, self.ch_gl, self.moderate = True, True, True
-                                            self.uses["X-wings"] += 1
-                    elif num_is_valid_for_method_alt and len(meet_twice_in_row) == 3:
-                        if are_sync_ext(meet_twice_in_row[0][0], meet_twice_in_row[0][1], meet_twice_in_row[1][0], meet_twice_in_row[1][1], meet_twice_in_row[2][0], meet_twice_in_row[2][1], 1):
-                            extr_rows = []
-                            extr_columns = []
-                            for cell in [meet_twice_in_row[0][0], meet_twice_in_row[0][1], meet_twice_in_row[1][0], meet_twice_in_row[1][1], meet_twice_in_row[2][0], meet_twice_in_row[2][1]]:
-                                if cell[0] not in extr_rows:
-                                    extr_rows.append(cell[0])
-                                if cell[1] not in extr_columns:
-                                    extr_columns.append(cell[1])
-                            try:
-                                extr_rows = sorted(extr_rows)
-                                extr_columns = sorted(extr_columns)
-                            except:
-                                pass
-                            if not self.check_if_in_the_same_block_ext(extr_rows, extr_columns):
-                                for g in range(9):
-                                    if str(type(self.sudoku_table[g][extr_columns[0]]))=="<class 'list'>" and g not in [extr_rows[0], extr_rows[1], extr_rows[2]]:
-                                        if k in self.sudoku_table[g][extr_columns[0]]:
-                                            self.sudoku_table[g][extr_columns[0]].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(extr_columns[0])}{g+1} (due to swordfishing in columns {self.letter_for_collumn(extr_columns[0])}, {self.letter_for_collumn(extr_columns[1])} & {self.letter_for_collumn(extr_columns[2])})")
-                                            self.action += 1
-                                            table_changed, self.ch_gl, self.moderate = True, True, True
-                                            self.uses["Swordfishing"] += 1
-                                    if str(type(self.sudoku_table[g][extr_columns[1]]))=="<class 'list'>" and g not in [extr_rows[0], extr_rows[1], extr_rows[2]]:
-                                        if k in self.sudoku_table[g][extr_columns[1]]:
-                                            self.sudoku_table[g][extr_columns[1]].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(extr_columns[1])}{g+1} (due to swordfishing in columns {self.letter_for_collumn(extr_columns[0])}, {self.letter_for_collumn(extr_columns[1])} & {self.letter_for_collumn(extr_columns[2])})")
-                                            self.action += 1
-                                            table_changed, self.ch_gl, self.moderate = True, True, True
-                                            self.uses["Swordfishing"] += 1
-                                    if str(type(self.sudoku_table[g][extr_columns[2]]))=="<class 'list'>" and g not in [extr_rows[0], extr_rows[1], extr_rows[2]]:
-                                        if k in self.sudoku_table[g][extr_columns[2]]:
-                                            self.sudoku_table[g][extr_columns[2]].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(extr_columns[2])}{g+1} (due to swordfishing in columns {self.letter_for_collumn(extr_columns[0])}, {self.letter_for_collumn(extr_columns[1])} & {self.letter_for_collumn(extr_columns[2])})")
-                                            self.action += 1
-                                            table_changed, self.ch_gl, self.moderate = True, True, True
-                                            self.uses["Swordfishing"] += 1
+
 
     def check_if_in_the_same_block(self, cell1, cell2, cell3, cell4):
         if cell1[0]//3 == cell2[0]//3 and cell1[0]//3 == cell3[0]//3 and cell1[0]//3 == cell4[0]//3 and cell2[0]//3 == cell3[0]//3 and cell2[0]//3 == cell4[0]//3 and cell3[0]//3 == cell4[0]//3:
@@ -1854,7 +1870,7 @@ class Sudoku_main_work:
     def build_sudoku(self):
         self.mode = "creation"
         self.cannot_be_deleted, self.solvability_build = [], True
-        self.filled_cells = [9]*9
+        self.filled_cells = [9, 9, 9, 9, 9, 9, 9, 9, 9]
         self.sudoku_table_build = [[0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0]]
         for k in range(0, 81):
             temp = self.enter_numbers_building_mode[k].get()
@@ -1880,18 +1896,19 @@ class Sudoku_main_work:
     def generate_sudoku(self):
         self.mode = "generation"
         self.cannot_be_deleted = []
-        self.filled_cells = [9]*9
+        self.filled_cells = [9, 9, 9, 9, 9, 9, 9, 9, 9]
         self.sudoku_table_build = [[0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0]]
         self.sudoku_table_build = self.basic_backtracking(self.sudoku_table_build)
         self.check_if_correct_for_building()
 
     def check_if_correct_for_building(self):
-        self.look_for_x_wing_trap()
-        self.look_for_ideal_twins_trap()
-        self.cannot_be_deleted = sorted(self.cannot_be_deleted)
         if self.difficulty_evaluation == "hints":
             self.build_cell_by_cell()
         elif self.difficulty_evaluation == "levels":
+            if int(self.enter_number_of_hints_building_mode.get()) < 3:
+                self.look_for_x_wing_trap()
+                self.look_for_ideal_twins_trap()
+                self.cannot_be_deleted = sorted(self.cannot_be_deleted)
             self.build_cell_by_cell_alt()
 
     def build_cell_by_cell(self):
@@ -2214,6 +2231,7 @@ class Sudoku_main_work:
                                 if allowed_s:
                                     a = random.choice(templist_upd[random.choice([0, 1])])
                                     self.cannot_be_deleted.append((9*a[0])+a[1])
+
 
 if __name__=='__main__':
     tk = Tk()
