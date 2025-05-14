@@ -100,19 +100,25 @@ class Sudoku_main_work:
             difficulty = "easy"
         else:
             difficulty = "hard"
-        self.solvability, self.iters, self.solved = "possible", 0, False
+        self.solvability, self.iters, self.solved, am_hints, reason = "possible", 0, False, 0, "None"
         if self.called_by == "__call__":
             for k in range(81):
                 temp = self.enter_numbers_solving_mode[k].get()
-                if len(temp)>1:
-                    self.solvability = "impossible"
-                    reason = "Invalid values!"
-                    break
-                elif len(temp) == 1:
+                if temp in ["1", "2", "3", "4", "5", "6", "7", "8", "9"]:
                     try:
                         self.asign_cell_num(k//9, k%9, temp, "as a hint")
+                        am_hints += 1
                     except:
                         pass
+                elif temp == "":
+                    pass
+                else:
+                    self.solvability = "impossible"
+                    reason = "Invalid values!"
+                    break     
+            if am_hints < 17 and self.solvability != "impossible":
+                self.solvability = "impossible"
+                reason = "There's less than 17 hints!"
         elif self.called_by == "build_cell_by_cell" or self.called_by == "build_cell_by_cell_alt":
             tables_iden = copy.deepcopy(self.sudoku_table_build)
             for k in range(81):
@@ -172,35 +178,47 @@ class Sudoku_main_work:
                     self.solved = True
                     break
         if self.solvability == "impossible":
+            if reason != "None" and self.called_by == "__call__":
+                temp_text_widget = Text(tk, wrap="word")
+                temp_text_widget.place(x = 5, y =  505, width = 665, height = 200 )
+                scrollbar = Scrollbar(tk, command=temp_text_widget.yview)
+                temp_text_widget.config(yscrollcommand=scrollbar.set)
+                scrollbar.place(x=670, y=505, height=200)
+                temp_text_widget.insert(END, f"{reason}")
+                temp_label = Label(tk, text = "Error", bg = "black", fg = "white", font=("Calibri", 10))
+                temp_label.place(x = 500, y =  355, width = 200, height = 30 )
             difficulty = "impossible"
             self.solved = False
-        if self.called_by == "__call__":
-            temp_text_widget = Text(tk, wrap="word")
-            temp_text_widget.place(x = 5, y =  505, width = 665, height = 200 )
-            scrollbar = Scrollbar(tk, command=temp_text_widget.yview)
-            temp_text_widget.config(yscrollcommand=scrollbar.set)
-            scrollbar.place(x=670, y=505, height=200)
-            temp_label = Label(tk, text = f"Difficulty: {difficulty}", bg = "black", fg = "white", font=("Calibri", 10))
-            temp_label.place(x = 500, y =  355, width = 200, height = 30 )
-            items = ""
-            for item in self.list_of_changes_solving_mode:
-                temp_text_widget.insert(END, item + "\n")
-            temp_text_widget.insert(END, f"Difficulty evaluated as {difficulty}\n")
-            for item in self.uses:
-                temp_text_widget.insert(END, f"{item}: {self.uses[item]}\n")
-        elif (self.called_by == "build_cell_by_cell" or self.called_by == "build_cell_by_cell_alt") and self.solved:
-            temp_text_widget = Text(tk, wrap="word")
-            temp_text_widget.place(x = 5, y =  505, width = 665, height = 200 )
-            scrollbar = Scrollbar(tk, command=temp_text_widget.yview)
-            temp_text_widget.config(yscrollcommand=scrollbar.set)
-            scrollbar.place(x=670, y=505, height=200)
-            temp_text_widget.insert(END, f"Step: {self.h}, Difficulty evaluated as {difficulty}\n")
-            if int(self.enter_number_of_hints_building_mode.get()) <= 1 and difficulty != "easy":
-                temp_text_widget.insert(END, f"Step: {self.h+1}, Difficulty evaluated as easy\n")
-            for item in self.uses:
-                temp_text_widget.insert(END, f"{item}: {self.uses[item]}\n")
-        self.difficulty = difficulty
-            
+        else:
+            if self.called_by == "__call__":
+                temp_text_widget = Text(tk, wrap="word")
+                temp_text_widget.place(x = 5, y =  505, width = 665, height = 200 )
+                scrollbar = Scrollbar(tk, command=temp_text_widget.yview)
+                temp_text_widget.config(yscrollcommand=scrollbar.set)
+                scrollbar.place(x=670, y=505, height=200)
+                temp_label = Label(tk, text = f"Difficulty: {difficulty}", bg = "black", fg = "white", font=("Calibri", 10))
+                temp_label.place(x = 500, y =  355, width = 200, height = 30 )
+                items = ""
+                for item in self.list_of_changes_solving_mode:
+                    temp_text_widget.insert(END, item + "\n")
+                temp_text_widget.insert(END, f"Difficulty evaluated as {difficulty}\n")
+                for item in self.uses:
+                    temp_text_widget.insert(END, f"{item}: {self.uses[item]}\n")
+            elif (self.called_by == "build_cell_by_cell" or self.called_by == "build_cell_by_cell_alt") and self.solved:
+                temp_text_widget = Text(tk, wrap="word")
+                temp_text_widget.place(x = 5, y =  505, width = 665, height = 200 )
+                scrollbar = Scrollbar(tk, command=temp_text_widget.yview)
+                temp_text_widget.config(yscrollcommand=scrollbar.set)
+                scrollbar.place(x=670, y=505, height=200)
+                temp_text_widget.insert(END, f"Step: {self.h}, Difficulty evaluated as {difficulty}\n")
+                if int(self.enter_number_of_hints_building_mode.get()) <= 1 and difficulty != "easy":
+                    temp_text_widget.insert(END, f"Step: {self.h+1}, Difficulty evaluated as easy\n")
+                for item in self.uses:
+                    temp_text_widget.insert(END, f"{item}: {self.uses[item]}\n")
+            self.difficulty = difficulty
+
+    def impossible_due_to_multiple_solutions(self):
+        self.solvability = "impossible"
 
     def solve_by_easy_methods(self):
         self.ch_in_basics = True
@@ -240,9 +258,6 @@ class Sudoku_main_work:
             if self.solvability == "possible":
                 self.coloring()
 
-    def impossible_due_to_multiple_solutions(self):
-        self.solvability = "impossible"
-
     def sudoku_solve_branched(self, g):
         self.branches_limit_countdown += 1
         if self.solvability != "іmpossible" and ((self.called_by == "build_cell_by_cell" or self.called_by == "build_cell_by_cell_alt") and self.branches_limit_countdown < 50 and g < 4) or ((self.called_by == "__call__" or self.called_by == "sudoku_solve_branched") and self.branches_limit_countdown < 10000):
@@ -258,13 +273,13 @@ class Sudoku_main_work:
                             self.solve_sudoku(k, copy.deepcopy(self.sudoku_table[k//9][k%9])[i], gen = g+1)
                             if self.solved:
                                 successes.append([k//9, k%9, sudoku_table_original[k//9][k%9][i]])
-                            if self.solvability != "impossible multiple":
+                            if self.solvability != "іmpossible":
                                 self.solvability, self.solved = "possible", False
                             else:
                                 break
                         self.sudoku_table = copy.deepcopy(sudoku_table_original)
                         break
-                if self.solvability != "impossible multiple":
+                if self.solvability != "іmpossible":
                     if len(successes) == 1:
                         if g == 0:
                             self.called_by = self.called_by_on_first_gen
