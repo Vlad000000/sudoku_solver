@@ -163,8 +163,8 @@ class Sudoku_main_work:
                         if allowed_h:
                             self.solved = False
                             self.sudoku_solve_branched(gen)
-                            if self.solvability == "impossible multiple":
-                                self.solvability = "impossible"
+                            if self.solvability == "іmpossible":
+                                self.impossible_due_to_multiple_solutions()
                         else:
                             self.solved = True
                             break
@@ -174,7 +174,7 @@ class Sudoku_main_work:
         if self.solvability == "impossible":
             difficulty = "impossible"
             self.solved = False
-        if self.called_by == "__call__": #and self.solved:
+        if self.called_by == "__call__":
             temp_text_widget = Text(tk, wrap="word")
             temp_text_widget.place(x = 5, y =  505, width = 665, height = 200 )
             scrollbar = Scrollbar(tk, command=temp_text_widget.yview)
@@ -240,9 +240,12 @@ class Sudoku_main_work:
             if self.solvability == "possible":
                 self.coloring()
 
+    def impossible_due_to_multiple_solutions(self):
+        self.solvability = "impossible"
+
     def sudoku_solve_branched(self, g):
         self.branches_limit_countdown += 1
-        if self.solvability != "impossible multiple" and ((self.called_by == "build_cell_by_cell" or self.called_by == "build_cell_by_cell_alt") and self.branches_limit_countdown < 50 and g < 4) or ((self.called_by == "__call__" or self.called_by == "sudoku_solve_branched") and self.branches_limit_countdown < 10000):
+        if self.solvability != "іmpossible" and ((self.called_by == "build_cell_by_cell" or self.called_by == "build_cell_by_cell_alt") and self.branches_limit_countdown < 50 and g < 4) or ((self.called_by == "__call__" or self.called_by == "sudoku_solve_branched") and self.branches_limit_countdown < 10000):
             if g == 0:
                 self.called_by_on_first_gen = self.called_by
             if self.solvability == "possible":
@@ -268,10 +271,10 @@ class Sudoku_main_work:
                         self.asign_cell_num(successes[0][0], successes[0][1], successes[0][2], "as a one possible branched solution")
                         self.ch_gl = True
                         self.comprehanded = True
-                    elif len(successes) != 1:
+                    elif len(successes) < 1:
                         self.solvability = "impossible"
-                        if len(successes) > 1:
-                            self.solvability = "impossible multiple"
+                    elif len(successes) > 1:
+                        self.solvability = "іmpossible"
             else:
                 self.solved = False
         else:
@@ -325,7 +328,7 @@ class Sudoku_main_work:
                             if k in self.sudoku_table[n][c]:
                                 cells.append([n, c])
                     if len(cells) == 1:
-                        self.asign_cell_num(cells[0][0], cells[0][1], k, f"as one possible in a collumn {self.letter_for_collumn(c)}")
+                        self.asign_cell_num(cells[0][0], cells[0][1], k, f"as one possible in a column {self.letter_for_column(c)}")
                         table_changed, self.ch_gl, self.ch_in_basics = True, True, True
                         self.uses["Hidden Singles"] += 1
                     elif len(cells) == 0:
@@ -392,7 +395,7 @@ class Sudoku_main_work:
                             if str(type(self.sudoku_table[((b//3)*3)+blockade_horizontal_line][l]))=="<class 'list'>" and l not in [(b%3)*3, ((b%3)*3)+1, ((b%3)*3)+2]:
                                 if k in self.sudoku_table[((b//3)*3)+blockade_horizontal_line][l]:
                                     self.sudoku_table[((b//3)*3)+blockade_horizontal_line][l].remove(int(k))
-                                    self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(l)}{((b//3)*3)+blockade_horizontal_line+1} (due to blockade in block #{b+1} horizontaly)")
+                                    self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(l)}{((b//3)*3)+blockade_horizontal_line+1} (due to blockade in block #{b+1} horizontaly)")
                                     self.action += 1
                                     table_changed, self.ch_gl, self.moderate = True, True, True
                                     self.uses["Blockades"] += 1
@@ -407,7 +410,7 @@ class Sudoku_main_work:
                             if str(type(self.sudoku_table[g][((b%3)*3)+blockade_vertical_line]))=="<class 'list'>" and g not in [(b//3)*3, ((b//3)*3)+1, ((b//3)*3)+2]:
                                 if k in self.sudoku_table[g][((b%3)*3)+blockade_vertical_line]:
                                     self.sudoku_table[g][((b%3)*3)+blockade_vertical_line].remove(int(k))
-                                    self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(((b%3)*3)+blockade_vertical_line)}{g+1} (due to blockade in block #{b+1} verticaly)")
+                                    self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(((b%3)*3)+blockade_vertical_line)}{g+1} (due to blockade in block #{b+1} verticaly)")
                                     self.action += 1
                                     table_changed, self.ch_gl, self.moderate = True, True, True
                                     self.uses["Blockades"] += 1
@@ -445,7 +448,7 @@ class Sudoku_main_work:
                                         if str(type(self.sudoku_table[r][g]))=="<class 'list'>":
                                             if k in self.sudoku_table[r][g]:
                                                 self.sudoku_table[r][g].remove(int(k))
-                                                self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(g)}{r+1} (due to blockade in blocks #{b1+1} and {b2+1} horizontaly)")
+                                                self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(g)}{r+1} (due to blockade in blocks #{b1+1} and {b2+1} horizontaly)")
                                                 self.action += 1
                                                 table_changed, self.ch_gl, self.moderate = True, True, True
                                                 self.uses["Blockades"] += 1
@@ -478,7 +481,7 @@ class Sudoku_main_work:
                                         if str(type(self.sudoku_table[g][c]))=="<class 'list'>":
                                             if k in self.sudoku_table[g][c]:
                                                 self.sudoku_table[g][c].remove(int(k))
-                                                self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(c)}{g+1} (due to blockade in blocks #{b1+1} and {b2+1} verticaly)")
+                                                self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(c)}{g+1} (due to blockade in blocks #{b1+1} and {b2+1} verticaly)")
                                                 self.action += 1
                                                 table_changed, self.ch_gl, self.moderate = True, True, True
                                                 self.uses["Blockades"] += 1
@@ -507,7 +510,7 @@ class Sudoku_main_work:
                         for cell in cells_of_structure:
                             if len(self.sudoku_table[cell[0]][cell[1]]) > len(cell[2]):
                                 self.sudoku_table[cell[0]][cell[1]] = cell[2]
-                                self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {cell[2]} in cell {self.letter_for_collumn(cell[1])}{cell[0]+1} (hidden triplet in block #{b+1})")
+                                self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {cell[2]} in cell {self.letter_for_column(cell[1])}{cell[0]+1} (hidden triplet in block #{b+1})")
                                 self.action += 1
                                 table_changed = self.ch_gl = self.moderate = True
                                 self.uses["Hidden Triplet"] += 1
@@ -530,7 +533,7 @@ class Sudoku_main_work:
                                 new_values = [x for x in self.sudoku_table[cell[0]][cell[1]] if x not in union]
                                 if len(new_values) < len(self.sudoku_table[cell[0]][cell[1]]):
                                     self.sudoku_table[cell[0]][cell[1]] = new_values
-                                    self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {new_values} in cell {self.letter_for_collumn(cell[1])}{cell[0]+1} (obvious triplet in block #{b+1})")
+                                    self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {new_values} in cell {self.letter_for_column(cell[1])}{cell[0]+1} (obvious triplet in block #{b+1})")
                                     self.action += 1
                                     table_changed = self.ch_gl = self.moderate = True
                                     self.uses["Naked Triplet"] += 1
@@ -554,7 +557,7 @@ class Sudoku_main_work:
                         for cell in cells_of_structure:
                             if len(self.sudoku_table[cell[0]][cell[1]]) > len(cell[2]):
                                 self.sudoku_table[cell[0]][cell[1]] = cell[2]
-                                self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {cell[2]} in cell {self.letter_for_collumn(cell[1])}{cell[0]+1} (hidden pair in block #{b+1})")
+                                self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {cell[2]} in cell {self.letter_for_column(cell[1])}{cell[0]+1} (hidden pair in block #{b+1})")
                                 self.action += 1
                                 table_changed = self.ch_gl = self.moderate = True
                                 self.uses["Hidden Pair"] += 1
@@ -577,7 +580,7 @@ class Sudoku_main_work:
                                 new_values = [x for x in self.sudoku_table[cell[0]][cell[1]] if x not in union]
                                 if len(new_values) < len(self.sudoku_table[cell[0]][cell[1]]):
                                     self.sudoku_table[cell[0]][cell[1]] = new_values
-                                    self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {new_values} in cell {self.letter_for_collumn(cell[1])}{cell[0]+1} (obvious pair in block #{b+1})")
+                                    self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {new_values} in cell {self.letter_for_column(cell[1])}{cell[0]+1} (obvious pair in block #{b+1})")
                                     self.action += 1
                                     table_changed = self.ch_gl = self.moderate = True
                                     self.uses["Naked Pair"] += 1
@@ -601,7 +604,7 @@ class Sudoku_main_work:
                         for cell in cells_of_structure:
                             if len(self.sudoku_table[cell[0]][cell[1]]) > len(cell[2]):
                                 self.sudoku_table[cell[0]][cell[1]] = cell[2]
-                                self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {cell[2]} in cell {self.letter_for_collumn(cell[1])}{cell[0]+1} (hidden triplet in collumn #{c+1})")
+                                self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {cell[2]} in cell {self.letter_for_column(cell[1])}{cell[0]+1} (hidden triplet in column #{c+1})")
                                 self.action += 1
                                 table_changed = self.ch_gl = self.moderate = True
                                 self.uses["Hidden Triplet"] += 1
@@ -624,7 +627,7 @@ class Sudoku_main_work:
                                 new_values = [x for x in self.sudoku_table[cell[0]][cell[1]] if x not in union]
                                 if len(new_values) < len(self.sudoku_table[cell[0]][cell[1]]):
                                     self.sudoku_table[cell[0]][cell[1]] = new_values
-                                    self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {new_values} in cell {self.letter_for_collumn(cell[1])}{cell[0]+1} (obvious triplet collumn #{c+1})")
+                                    self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {new_values} in cell {self.letter_for_column(cell[1])}{cell[0]+1} (obvious triplet column #{c+1})")
                                     self.action += 1
                                     table_changed = self.ch_gl = self.moderate = True
                                     self.uses["Naked Triplet"] += 1
@@ -648,7 +651,7 @@ class Sudoku_main_work:
                         for cell in cells_of_structure:
                             if len(self.sudoku_table[cell[0]][cell[1]]) > len(cell[2]):
                                 self.sudoku_table[cell[0]][cell[1]] = cell[2]
-                                self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {cell[2]} in cell {self.letter_for_collumn(cell[1])}{cell[0]+1} (hidden pair in collumn #{c+1})")
+                                self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {cell[2]} in cell {self.letter_for_column(cell[1])}{cell[0]+1} (hidden pair in column #{c+1})")
                                 self.action += 1
                                 table_changed = self.ch_gl = self.moderate = True
                                 self.uses["Hidden Pair"] += 1
@@ -671,7 +674,7 @@ class Sudoku_main_work:
                                 new_values = [x for x in self.sudoku_table[cell[0]][cell[1]] if x not in union]
                                 if len(new_values) < len(self.sudoku_table[cell[0]][cell[1]]):
                                     self.sudoku_table[cell[0]][cell[1]] = new_values
-                                    self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {new_values} in cell {self.letter_for_collumn(cell[1])}{cell[0]+1} (obvious pair collumn #{c+1})")
+                                    self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {new_values} in cell {self.letter_for_column(cell[1])}{cell[0]+1} (obvious pair column #{c+1})")
                                     self.action += 1
                                     table_changed = self.ch_gl = self.moderate = True
                                     self.uses["Naked Pair"] += 1
@@ -695,7 +698,7 @@ class Sudoku_main_work:
                         for cell in cells_of_structure:
                             if len(self.sudoku_table[cell[0]][cell[1]]) > len(cell[2]):
                                 self.sudoku_table[cell[0]][cell[1]] = cell[2]
-                                self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {cell[2]} in cell {self.letter_for_collumn(cell[1])}{cell[0]+1} (hidden triplet in row #{r+1})")
+                                self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {cell[2]} in cell {self.letter_for_column(cell[1])}{cell[0]+1} (hidden triplet in row #{r+1})")
                                 self.action += 1
                                 table_changed = self.ch_gl = self.moderate = True
                                 self.uses["Hidden Triplet"] += 1
@@ -718,7 +721,7 @@ class Sudoku_main_work:
                                 new_values = [x for x in self.sudoku_table[cell[0]][cell[1]] if x not in union]
                                 if len(new_values) < len(self.sudoku_table[cell[0]][cell[1]]):
                                     self.sudoku_table[cell[0]][cell[1]] = new_values
-                                    self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {new_values} in cell {self.letter_for_collumn(cell[1])}{cell[0]+1} (obvious triplet in row #{r+1})")
+                                    self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {new_values} in cell {self.letter_for_column(cell[1])}{cell[0]+1} (obvious triplet in row #{r+1})")
                                     self.action += 1
                                     table_changed = self.ch_gl = self.moderate = True
                                     self.uses["Naked Triplet"] += 1
@@ -742,7 +745,7 @@ class Sudoku_main_work:
                         for cell in cells_of_structure:
                             if len(self.sudoku_table[cell[0]][cell[1]]) > len(cell[2]):
                                 self.sudoku_table[cell[0]][cell[1]] = cell[2]
-                                self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {cell[2]} in cell {self.letter_for_collumn(cell[1])}{cell[0]+1} (hidden pair in row #{r+1})")
+                                self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {cell[2]} in cell {self.letter_for_column(cell[1])}{cell[0]+1} (hidden pair in row #{r+1})")
                                 self.action += 1
                                 table_changed = self.ch_gl = self.moderate = True
                                 self.uses["Hidden Pair"] += 1
@@ -765,7 +768,7 @@ class Sudoku_main_work:
                                 new_values = [x for x in self.sudoku_table[cell[0]][cell[1]] if x not in union]
                                 if len(new_values) < len(self.sudoku_table[cell[0]][cell[1]]):
                                     self.sudoku_table[cell[0]][cell[1]] = new_values
-                                    self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {new_values} in cell {self.letter_for_collumn(cell[1])}{cell[0]+1} (obvious pair in row #{r+1})")
+                                    self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {new_values} in cell {self.letter_for_column(cell[1])}{cell[0]+1} (obvious pair in row #{r+1})")
                                     self.action += 1
                                     table_changed = self.ch_gl = self.moderate = True
                                     self.uses["Naked Pair"] += 1
@@ -794,7 +797,7 @@ class Sudoku_main_work:
                         for cell in cells_of_structure:
                             if len(self.sudoku_table[cell[0]][cell[1]]) > len(cell[2]):
                                 self.sudoku_table[cell[0]][cell[1]] = cell[2]
-                                self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {cell[2]} in cell {self.letter_for_collumn(cell[1])}{cell[0]+1} (hidden quad in block #{b+1})")
+                                self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {cell[2]} in cell {self.letter_for_column(cell[1])}{cell[0]+1} (hidden quad in block #{b+1})")
                                 self.action += 1
                                 table_changed = self.ch_gl = self.moderate = True
                                 self.uses["Hidden Quad"] += 1
@@ -816,7 +819,7 @@ class Sudoku_main_work:
                                 new_values = [x for x in self.sudoku_table[cell[0]][cell[1]] if x not in union]
                                 if len(new_values) < len(self.sudoku_table[cell[0]][cell[1]]):
                                     self.sudoku_table[cell[0]][cell[1]] = new_values
-                                    self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {new_values} in cell {self.letter_for_collumn(cell[1])}{cell[0]+1} (obvious quad in block #{b+1})")
+                                    self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {new_values} in cell {self.letter_for_column(cell[1])}{cell[0]+1} (obvious quad in block #{b+1})")
                                     self.action += 1
                                     table_changed = self.ch_gl = self.moderate = True
                                     self.uses["Naked Quad"] += 1
@@ -840,7 +843,7 @@ class Sudoku_main_work:
                         for cell in cells_of_structure:
                             if len(self.sudoku_table[cell[0]][cell[1]]) > len(cell[2]):
                                 self.sudoku_table[cell[0]][cell[1]] = cell[2]
-                                self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {cell[2]} in cell {self.letter_for_collumn(cell[1])}{cell[0]+1} (hidden quint in block #{b+1})")
+                                self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {cell[2]} in cell {self.letter_for_column(cell[1])}{cell[0]+1} (hidden quint in block #{b+1})")
                                 self.action += 1
                                 table_changed = self.ch_gl = self.moderate = True
                                 self.uses["Hidden Quint"] += 1
@@ -862,7 +865,7 @@ class Sudoku_main_work:
                                 new_values = [x for x in self.sudoku_table[cell[0]][cell[1]] if x not in union]
                                 if len(new_values) < len(self.sudoku_table[cell[0]][cell[1]]):
                                     self.sudoku_table[cell[0]][cell[1]] = new_values
-                                    self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {new_values} in cell {self.letter_for_collumn(cell[1])}{cell[0]+1} (obvious quint in block #{b+1})")
+                                    self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {new_values} in cell {self.letter_for_column(cell[1])}{cell[0]+1} (obvious quint in block #{b+1})")
                                     self.action += 1
                                     table_changed = self.ch_gl = self.moderate = True
                                     self.uses["Naked Quint"] += 1
@@ -886,7 +889,7 @@ class Sudoku_main_work:
                         for cell in cells_of_structure:
                             if len(self.sudoku_table[cell[0]][cell[1]]) > len(cell[2]):
                                 self.sudoku_table[cell[0]][cell[1]] = cell[2]
-                                self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {cell[2]} in cell {self.letter_for_collumn(cell[1])}{cell[0]+1} (hidden quad in collumn #{c+1})")
+                                self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {cell[2]} in cell {self.letter_for_column(cell[1])}{cell[0]+1} (hidden quad in column #{c+1})")
                                 self.action += 1
                                 table_changed = self.ch_gl = self.moderate = True
                                 self.uses["Hidden Quad"] += 1
@@ -909,7 +912,7 @@ class Sudoku_main_work:
                                 new_values = [x for x in self.sudoku_table[cell[0]][cell[1]] if x not in union]
                                 if len(new_values) < len(self.sudoku_table[cell[0]][cell[1]]):
                                     self.sudoku_table[cell[0]][cell[1]] = new_values
-                                    self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {new_values} in cell {self.letter_for_collumn(cell[1])}{cell[0]+1} (obvious quad collumn #{c+1})")
+                                    self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {new_values} in cell {self.letter_for_column(cell[1])}{cell[0]+1} (obvious quad column #{c+1})")
                                     self.action += 1
                                     table_changed = self.ch_gl = self.moderate = True
                                     self.uses["Naked Quad"] += 1
@@ -933,7 +936,7 @@ class Sudoku_main_work:
                         for cell in cells_of_structure:
                             if len(self.sudoku_table[cell[0]][cell[1]]) > len(cell[2]):
                                 self.sudoku_table[cell[0]][cell[1]] = cell[2]
-                                self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {cell[2]} in cell {self.letter_for_collumn(cell[1])}{cell[0]+1} (hidden quint in collumn #{c+1})")
+                                self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {cell[2]} in cell {self.letter_for_column(cell[1])}{cell[0]+1} (hidden quint in column #{c+1})")
                                 self.action += 1
                                 table_changed = self.ch_gl = self.moderate = True
                                 self.uses["Hidden Quint"] += 1
@@ -956,7 +959,7 @@ class Sudoku_main_work:
                                 new_values = [x for x in self.sudoku_table[cell[0]][cell[1]] if x not in union]
                                 if len(new_values) < len(self.sudoku_table[cell[0]][cell[1]]):
                                     self.sudoku_table[cell[0]][cell[1]] = new_values
-                                    self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {new_values} in cell {self.letter_for_collumn(cell[1])}{cell[0]+1} (obvious quint collumn #{c+1})")
+                                    self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {new_values} in cell {self.letter_for_column(cell[1])}{cell[0]+1} (obvious quint column #{c+1})")
                                     self.action += 1
                                     table_changed = self.ch_gl = self.moderate = True
                                     self.uses["Naked Quint"] += 1
@@ -981,7 +984,7 @@ class Sudoku_main_work:
                         for cell in cells_of_structure:
                             if len(self.sudoku_table[cell[0]][cell[1]]) > len(cell[2]):
                                 self.sudoku_table[cell[0]][cell[1]] = cell[2]
-                                self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {cell[2]} in cell {self.letter_for_collumn(cell[1])}{cell[0]+1} (hidden quad in row #{r+1})")
+                                self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {cell[2]} in cell {self.letter_for_column(cell[1])}{cell[0]+1} (hidden quad in row #{r+1})")
                                 self.action += 1
                                 table_changed = self.ch_gl = self.moderate = True
                                 self.uses["Hidden Quad"] += 1
@@ -1004,7 +1007,7 @@ class Sudoku_main_work:
                                 new_values = [x for x in self.sudoku_table[cell[0]][cell[1]] if x not in union]
                                 if len(new_values) < len(self.sudoku_table[cell[0]][cell[1]]):
                                     self.sudoku_table[cell[0]][cell[1]] = new_values
-                                    self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {new_values} in cell {self.letter_for_collumn(cell[1])}{cell[0]+1} (obvious quad in row #{r+1})")
+                                    self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {new_values} in cell {self.letter_for_column(cell[1])}{cell[0]+1} (obvious quad in row #{r+1})")
                                     self.action += 1
                                     table_changed = self.ch_gl = self.moderate = True
                                     self.uses["Naked Quad"] += 1
@@ -1028,7 +1031,7 @@ class Sudoku_main_work:
                         for cell in cells_of_structure:
                             if len(self.sudoku_table[cell[0]][cell[1]]) > len(cell[2]):
                                 self.sudoku_table[cell[0]][cell[1]] = cell[2]
-                                self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {cell[2]} in cell {self.letter_for_collumn(cell[1])}{cell[0]+1} (hidden quint in row #{r+1})")
+                                self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {cell[2]} in cell {self.letter_for_column(cell[1])}{cell[0]+1} (hidden quint in row #{r+1})")
                                 self.action += 1
                                 table_changed = self.ch_gl = self.moderate = True
                                 self.uses["Hidden Quint"] += 1
@@ -1051,7 +1054,7 @@ class Sudoku_main_work:
                                 new_values = [x for x in self.sudoku_table[cell[0]][cell[1]] if x not in union]
                                 if len(new_values) < len(self.sudoku_table[cell[0]][cell[1]]):
                                     self.sudoku_table[cell[0]][cell[1]] = new_values
-                                    self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {new_values} in cell {self.letter_for_collumn(cell[1])}{cell[0]+1} (obvious quint in row #{r+1})")
+                                    self.list_of_changes_solving_mode.append(f"#{self.action} --- Reduced to {new_values} in cell {self.letter_for_column(cell[1])}{cell[0]+1} (obvious quint in row #{r+1})")
                                     self.action += 1
                                     table_changed = self.ch_gl = self.moderate = True
                                     self.uses["Naked Quint"] += 1
@@ -1112,7 +1115,7 @@ class Sudoku_main_work:
                             if color[(r, c)] == conflict_color and k in self.sudoku_table[r][c]:
                                 self.sudoku_table[r][c].remove(k)
                                 self.list_of_changes_solving_mode.append(
-                                    f"#{self.action} --- Coloring: removed {k} from {self.letter_for_collumn(c)}{r+1} (color conflict in chain)"
+                                    f"#{self.action} --- Coloring: removed {k} from {self.letter_for_column(c)}{r+1} (color conflict in chain)"
                                 )
                                 self.action += 1
                                 table_changed = True
@@ -1134,7 +1137,7 @@ class Sudoku_main_work:
                         if len(seen_colors) == 2:
                             self.sudoku_table[r][c].remove(k)
                             self.list_of_changes_solving_mode.append(
-                                f"#{self.action} --- Coloring: removed {k} from {self.letter_for_collumn(c)}{r+1} (sees both colors in a single chain)"
+                                f"#{self.action} --- Coloring: removed {k} from {self.letter_for_column(c)}{r+1} (sees both colors in a single chain)"
                             )
                             self.action += 1
                             table_changed = True
@@ -1216,21 +1219,21 @@ class Sudoku_main_work:
                                     if str(type(self.sudoku_table[rows_k[0]][g]))=="<class 'list'>" and g not in columns_k:
                                         if k in self.sudoku_table[rows_k[0]][g]:
                                             self.sudoku_table[rows_k[0]][g].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(g)}{rows_k[0]+1} (due to extended swordfishing in rows {rows_k})")
+                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(g)}{rows_k[0]+1} (due to extended swordfishing in rows {rows_k})")
                                             self.action += 1
                                             table_changed, self.ch_gl, self.moderate = True, True, True
                                             self.uses["Swordfishing"] += 1
                                     if str(type(self.sudoku_table[rows_k[1]][g]))=="<class 'list'>" and g not in columns_k:
                                         if k in self.sudoku_table[rows_k[1]][g]:
                                             self.sudoku_table[rows_k[1]][g].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(g)}{rows_k[1]+1} (due to extended swordfishing in rows {rows_k})")
+                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(g)}{rows_k[1]+1} (due to extended swordfishing in rows {rows_k})")
                                             self.action += 1
                                             table_changed, self.ch_gl, self.moderate = True, True, True
                                             self.uses["Swordfishing"] += 1
                                     if str(type(self.sudoku_table[rows_k[2]][g]))=="<class 'list'>" and g not in columns_k:
                                         if k in self.sudoku_table[rows_k[2]][g]:
                                             self.sudoku_table[rows_k[2]][g].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(g)}{rows_k[2]+1} (due to extended swordfishing in rows {rows_k})")
+                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(g)}{rows_k[2]+1} (due to extended swordfishing in rows {rows_k})")
                                             self.action += 1
                                             table_changed, self.ch_gl, self.moderate = True, True, True
                                             self.uses["Swordfishing"] += 1
@@ -1267,21 +1270,21 @@ class Sudoku_main_work:
                                     if str(type(self.sudoku_table[g][columns_k[0]]))=="<class 'list'>" and g not in rows_k:
                                         if k in self.sudoku_table[g][columns_k[0]]:
                                             self.sudoku_table[g][columns_k[0]].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(columns_k[0])}{g+1} (due to extended swordfishing in columns {columns_k})")
+                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(columns_k[0])}{g+1} (due to extended swordfishing in columns {columns_k})")
                                             self.action += 1
                                             table_changed, self.ch_gl, self.moderate = True, True, True
                                             self.uses["Swordfishing"] += 1
                                     if str(type(self.sudoku_table[g][columns_k[1]]))=="<class 'list'>" and g not in rows_k:
                                         if k in self.sudoku_table[g][columns_k[1]]:
                                             self.sudoku_table[g][columns_k[1]].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(columns_k[1])}{g+1} (due to extended swordfishing in columns {columns_k})")
+                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(columns_k[1])}{g+1} (due to extended swordfishing in columns {columns_k})")
                                             self.action += 1
                                             table_changed, self.ch_gl, self.moderate = True, True, True
                                             self.uses["Swordfishing"] += 1
                                     if str(type(self.sudoku_table[g][columns_k[2]]))=="<class 'list'>" and g not in rows_k:
                                         if k in self.sudoku_table[g][columns_k[2]]:
                                             self.sudoku_table[g][columns_k[2]].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(columns_k[2])}{g+1} (due to extended swordfishing in columns {columns_k})")
+                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(columns_k[2])}{g+1} (due to extended swordfishing in columns {columns_k})")
                                             self.action += 1
                                             table_changed, self.ch_gl, self.moderate = True, True, True
                                             self.uses["Swordfishing"] += 1
@@ -1326,14 +1329,14 @@ class Sudoku_main_work:
                                     if str(type(self.sudoku_table[rows_k[0]][g]))=="<class 'list'>" and g not in columns_k:
                                         if k in self.sudoku_table[rows_k[0]][g]:
                                             self.sudoku_table[rows_k[0]][g].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(g)}{rows_k[0]+1} (due to X-wing in rows)")
+                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(g)}{rows_k[0]+1} (due to X-wing in rows)")
                                             self.action += 1
                                             table_changed, self.ch_gl, self.moderate = True, True, True
                                             self.uses["X-wing"] += 1
                                     if str(type(self.sudoku_table[rows_k[1]][g]))=="<class 'list'>" and g not in columns_k:
                                         if k in self.sudoku_table[rows_k[1]][g]:
                                             self.sudoku_table[rows_k[1]][g].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(g)}{rows_k[1]+1} (due to X-wing in rows)")
+                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(g)}{rows_k[1]+1} (due to X-wing in rows)")
                                             self.action += 1
                                             table_changed, self.ch_gl, self.moderate = True, True, True
                                             self.uses["X-wing"] += 1
@@ -1368,14 +1371,14 @@ class Sudoku_main_work:
                                     if str(type(self.sudoku_table[g][columns_k[0]]))=="<class 'list'>" and g not in rows_k:
                                         if k in self.sudoku_table[g][columns_k[0]]:
                                             self.sudoku_table[g][columns_k[0]].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(columns_k[0])}{g+1} (due to X-wing in columns)")
+                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(columns_k[0])}{g+1} (due to X-wing in columns)")
                                             self.action += 1
                                             table_changed, self.ch_gl, self.moderate = True, True, True
                                             self.uses["X-wing"] += 1
                                     if str(type(self.sudoku_table[g][columns_k[1]]))=="<class 'list'>" and g not in rows_k:
                                         if k in self.sudoku_table[g][columns_k[1]]:
                                             self.sudoku_table[g][columns_k[1]].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(columns_k[1])}{g+1} (due to X-wing in columns)")
+                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(columns_k[1])}{g+1} (due to X-wing in columns)")
                                             self.action += 1
                                             table_changed, self.ch_gl, self.moderate = True, True, True
                                             self.uses["X-wing"] += 1
@@ -1425,28 +1428,28 @@ class Sudoku_main_work:
                                     if str(type(self.sudoku_table[rows_k[0]][g]))=="<class 'list'>" and g not in columns_k:
                                         if k in self.sudoku_table[rows_k[0]][g]:
                                             self.sudoku_table[rows_k[0]][g].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(g)}{rows_k[0]+1} (due to extended jellyfishing in rows)")
+                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(g)}{rows_k[0]+1} (due to extended jellyfishing in rows)")
                                             self.action += 1
                                             table_changed, self.ch_gl, self.moderate = True, True, True
                                             self.uses["Jellyfishing"] += 1
                                     if str(type(self.sudoku_table[rows_k[1]][g]))=="<class 'list'>" and g not in columns_k:
                                         if k in self.sudoku_table[rows_k[1]][g]:
                                             self.sudoku_table[rows_k[1]][g].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(g)}{rows_k[1]+1} (due to extended jellyfishing in rows)")
+                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(g)}{rows_k[1]+1} (due to extended jellyfishing in rows)")
                                             self.action += 1
                                             table_changed, self.ch_gl, self.moderate = True, True, True
                                             self.uses["Jellyfishing"] += 1
                                     if str(type(self.sudoku_table[rows_k[2]][g]))=="<class 'list'>" and g not in columns_k:
                                         if k in self.sudoku_table[rows_k[2]][g]:
                                             self.sudoku_table[rows_k[2]][g].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(g)}{rows_k[2]+1} (due to extended jellyfishing in rows)")
+                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(g)}{rows_k[2]+1} (due to extended jellyfishing in rows)")
                                             self.action += 1
                                             table_changed, self.ch_gl, self.moderate = True, True, True
                                             self.uses["Jellyfishing"] += 1
                                     if str(type(self.sudoku_table[rows_k[3]][g]))=="<class 'list'>" and g not in columns_k:
                                         if k in self.sudoku_table[rows_k[3]][g]:
                                             self.sudoku_table[rows_k[3]][g].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(g)}{rows_k[3]+1} (due to extended jellyfishing in rows)")
+                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(g)}{rows_k[3]+1} (due to extended jellyfishing in rows)")
                                             self.action += 1
                                             table_changed, self.ch_gl, self.moderate = True, True, True
                                             self.uses["Jellyfishing"] += 1
@@ -1485,28 +1488,28 @@ class Sudoku_main_work:
                                     if str(type(self.sudoku_table[g][columns_k[0]]))=="<class 'list'>" and g not in rows_k:
                                         if k in self.sudoku_table[g][columns_k[0]]:
                                             self.sudoku_table[g][columns_k[0]].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(columns_k[0])}{g+1} (due to extended jellyfishing in columns)")
+                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(columns_k[0])}{g+1} (due to extended jellyfishing in columns)")
                                             self.action += 1
                                             table_changed, self.ch_gl, self.moderate = True, True, True
                                             self.uses["Jellyfishing"] += 1
                                     if str(type(self.sudoku_table[g][columns_k[1]]))=="<class 'list'>" and g not in rows_k:
                                         if k in self.sudoku_table[g][columns_k[1]]:
                                             self.sudoku_table[g][columns_k[1]].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(columns_k[1])}{g+1} (due to extended jellyfishing in columns)")
+                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(columns_k[1])}{g+1} (due to extended jellyfishing in columns)")
                                             self.action += 1
                                             table_changed, self.ch_gl, self.moderate = True, True, True
                                             self.uses["Jellyfishing"] += 1
                                     if str(type(self.sudoku_table[g][columns_k[2]]))=="<class 'list'>" and g not in rows_k:
                                         if k in self.sudoku_table[g][columns_k[2]]:
                                             self.sudoku_table[g][columns_k[2]].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(columns_k[2])}{g+1} (due to extended jellyfishing in columns)")
+                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(columns_k[2])}{g+1} (due to extended jellyfishing in columns)")
                                             self.action += 1
                                             table_changed, self.ch_gl, self.moderate = True, True, True
                                             self.uses["Jellyfishing"] += 1
                                     if str(type(self.sudoku_table[g][columns_k[3]]))=="<class 'list'>" and g not in rows_k:
                                         if k in self.sudoku_table[g][columns_k[3]]:
                                             self.sudoku_table[g][columns_k[3]].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(columns_k[3])}{g+1} (due to extended jellyfishing in columns)")
+                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(columns_k[3])}{g+1} (due to extended jellyfishing in columns)")
                                             self.action += 1
                                             table_changed, self.ch_gl, self.moderate = True, True, True
                                             self.uses["Jellyfishing"] += 1
@@ -1557,35 +1560,35 @@ class Sudoku_main_work:
                                     if str(type(self.sudoku_table[rows_k[0]][g]))=="<class 'list'>" and g not in columns_k:
                                         if k in self.sudoku_table[rows_k[0]][g]:
                                             self.sudoku_table[rows_k[0]][g].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(g)}{rows_k[0]+1} (due to starfishing in rows)")
+                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(g)}{rows_k[0]+1} (due to starfishing in rows)")
                                             self.action += 1
                                             table_changed, self.ch_gl, self.moderate = True, True, True
                                             self.uses["Starfishing"] += 1
                                     if str(type(self.sudoku_table[rows_k[1]][g]))=="<class 'list'>" and g not in columns_k:
                                         if k in self.sudoku_table[rows_k[1]][g]:
                                             self.sudoku_table[rows_k[1]][g].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(g)}{rows_k[1]+1} (due to starfishing in rows)")
+                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(g)}{rows_k[1]+1} (due to starfishing in rows)")
                                             self.action += 1
                                             table_changed, self.ch_gl, self.moderate = True, True, True
                                             self.uses["Starfishing"] += 1
                                     if str(type(self.sudoku_table[rows_k[2]][g]))=="<class 'list'>" and g not in columns_k:
                                         if k in self.sudoku_table[rows_k[2]][g]:
                                             self.sudoku_table[rows_k[2]][g].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(g)}{rows_k[2]+1} (due to starfishing in rows)")
+                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(g)}{rows_k[2]+1} (due to starfishing in rows)")
                                             self.action += 1
                                             table_changed, self.ch_gl, self.moderate = True, True, True
                                             self.uses["Starfishing"] += 1
                                     if str(type(self.sudoku_table[rows_k[3]][g]))=="<class 'list'>" and g not in columns_k:
                                         if k in self.sudoku_table[rows_k[3]][g]:
                                             self.sudoku_table[rows_k[3]][g].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(g)}{rows_k[3]+1} (due to starfishing in rows)")
+                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(g)}{rows_k[3]+1} (due to starfishing in rows)")
                                             self.action += 1
                                             table_changed, self.ch_gl, self.moderate = True, True, True
                                             self.uses["Starfishing"] += 1
                                     if str(type(self.sudoku_table[rows_k[4]][g]))=="<class 'list'>" and g not in columns_k:
                                         if k in self.sudoku_table[rows_k[4]][g]:
                                             self.sudoku_table[rows_k[4]][g].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(g)}{rows_k[4]+1} (due to starfishing in rows)")
+                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(g)}{rows_k[4]+1} (due to starfishing in rows)")
                                             self.action += 1
                                             table_changed, self.ch_gl, self.moderate = True, True, True
                                             self.uses["Starfishing"] += 1
@@ -1626,35 +1629,35 @@ class Sudoku_main_work:
                                     if str(type(self.sudoku_table[g][columns_k[0]]))=="<class 'list'>" and g not in rows_k:
                                         if k in self.sudoku_table[g][columns_k[0]]:
                                             self.sudoku_table[g][columns_k[0]].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(columns_k[0])}{g+1} (due to starfishing in columns)")
+                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(columns_k[0])}{g+1} (due to starfishing in columns)")
                                             self.action += 1
                                             table_changed, self.ch_gl, self.moderate = True, True, True
                                             self.uses["Starfishing"] += 1
                                     if str(type(self.sudoku_table[g][columns_k[1]]))=="<class 'list'>" and g not in rows_k:
                                         if k in self.sudoku_table[g][columns_k[1]]:
                                             self.sudoku_table[g][columns_k[1]].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(columns_k[1])}{g+1} (due to starfishing in columns)")
+                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(columns_k[1])}{g+1} (due to starfishing in columns)")
                                             self.action += 1
                                             table_changed, self.ch_gl, self.moderate = True, True, True
                                             self.uses["Starfishing"] += 1
                                     if str(type(self.sudoku_table[g][columns_k[2]]))=="<class 'list'>" and g not in rows_k:
                                         if k in self.sudoku_table[g][columns_k[2]]:
                                             self.sudoku_table[g][columns_k[2]].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(columns_k[2])}{g+1} (due to starfishing in columns)")
+                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(columns_k[2])}{g+1} (due to starfishing in columns)")
                                             self.action += 1
                                             table_changed, self.ch_gl, self.moderate = True, True, True
                                             self.uses["Starfishing"] += 1
                                     if str(type(self.sudoku_table[g][columns_k[3]]))=="<class 'list'>" and g not in rows_k:
                                         if k in self.sudoku_table[g][columns_k[3]]:
                                             self.sudoku_table[g][columns_k[3]].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(columns_k[3])}{g+1} (due to starfishing in columns)")
+                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(columns_k[3])}{g+1} (due to starfishing in columns)")
                                             self.action += 1
                                             table_changed, self.ch_gl, self.moderate = True, True, True
                                             self.uses["Starfishing"] += 1
                                     if str(type(self.sudoku_table[g][columns_k[4]]))=="<class 'list'>" and g not in rows_k:
                                         if k in self.sudoku_table[g][columns_k[4]]:
                                             self.sudoku_table[g][columns_k[4]].remove(int(k))
-                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(columns_k[4])}{g+1} (due to starfishing in columns)")
+                                            self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(columns_k[4])}{g+1} (due to starfishing in columns)")
                                             self.action += 1
                                             table_changed, self.ch_gl, self.moderate = True, True, True
                                             self.uses["Starfishing"] += 1
@@ -1686,7 +1689,7 @@ class Sudoku_main_work:
                                 if str(type(self.sudoku_table[meet_twice_in_column_c[1][1][0]][f]))=="<class 'list'>":
                                     if k in self.sudoku_table[meet_twice_in_column_c[1][1][0]][f]:
                                         self.sudoku_table[meet_twice_in_column_c[1][1][0]][f].remove(int(k))
-                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(f)}{meet_twice_in_column_c[1][1][0]+1} (due to skyscraping)")
+                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(f)}{meet_twice_in_column_c[1][1][0]+1} (due to skyscraping)")
                                         self.action += 1
                                         table_changed, self.ch_gl, self.moderate = True, True, True
                                         self.uses["Skyscrapering"] += 1
@@ -1694,7 +1697,7 @@ class Sudoku_main_work:
                                 if str(type(self.sudoku_table[meet_twice_in_column_c[0][1][0]][g]))=="<class 'list'>":
                                     if k in self.sudoku_table[meet_twice_in_column_c[0][1][0]][g]:
                                         self.sudoku_table[meet_twice_in_column_c[0][1][0]][g].remove(int(k))
-                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(g)}{meet_twice_in_column_c[0][1][0]+1} (due to skyscraping)")
+                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(g)}{meet_twice_in_column_c[0][1][0]+1} (due to skyscraping)")
                                         self.action += 1
                                         table_changed, self.ch_gl, self.moderate = True, True, True
                                         self.uses["Skyscrapering"] += 1
@@ -1703,7 +1706,7 @@ class Sudoku_main_work:
                                 if str(type(self.sudoku_table[meet_twice_in_column_c[1][0][0]][f]))=="<class 'list'>":
                                     if k in self.sudoku_table[meet_twice_in_column_c[1][0][0]][f]:
                                         self.sudoku_table[meet_twice_in_column_c[1][0][0]][f].remove(int(k))
-                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(f)}{meet_twice_in_column_c[1][0][0]+1} (due to skyscraping)")
+                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(f)}{meet_twice_in_column_c[1][0][0]+1} (due to skyscraping)")
                                         self.action += 1
                                         table_changed, self.ch_gl, self.moderate = True, True, True
                                         self.uses["Skyscrapering"] += 1
@@ -1711,7 +1714,7 @@ class Sudoku_main_work:
                                 if str(type(self.sudoku_table[meet_twice_in_column_c[0][0][0]][g]))=="<class 'list'>":
                                     if k in self.sudoku_table[meet_twice_in_column_c[0][0][0]][g]:
                                         self.sudoku_table[meet_twice_in_column_c[0][0][0]][g].remove(int(k))
-                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(g)}{meet_twice_in_column_c[0][0][0]+1} (due to skyscraping)")
+                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(g)}{meet_twice_in_column_c[0][0][0]+1} (due to skyscraping)")
                                         self.action += 1
                                         table_changed, self.ch_gl, self.moderate = True, True, True
                                         self.uses["Skyscrapering"] += 1    
@@ -1733,7 +1736,7 @@ class Sudoku_main_work:
                                 if str(type(self.sudoku_table[f][meet_twice_in_row_c[1][1][1]]))=="<class 'list'>":
                                     if k in self.sudoku_table[f][meet_twice_in_row_c[1][1][1]]:
                                         self.sudoku_table[f][meet_twice_in_row_c[1][1][1]].remove(int(k))
-                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(meet_twice_in_row_c[1][1][1])}{f+1} (due to skyscraping)")
+                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(meet_twice_in_row_c[1][1][1])}{f+1} (due to skyscraping)")
                                         self.action += 1
                                         table_changed, self.ch_gl, self.moderate = True, True, True
                                         self.uses["Skyscrapering"] += 1
@@ -1741,7 +1744,7 @@ class Sudoku_main_work:
                                 if str(type(self.sudoku_table[g][meet_twice_in_row_c[0][1][1]]))=="<class 'list'>":
                                     if k in self.sudoku_table[g][meet_twice_in_row_c[0][1][1]]:
                                         self.sudoku_table[g][meet_twice_in_row_c[0][1][1]].remove(int(k))
-                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_collumn(meet_twice_in_row_c[0][1][1])}{g+1} (due to skyscraping)")
+                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {k} from list of p.n. in cell {self.letter_for_column(meet_twice_in_row_c[0][1][1])}{g+1} (due to skyscraping)")
                                         self.action += 1
                                         table_changed, self.ch_gl, self.moderate = True, True, True
                                         self.uses["Skyscrapering"] += 1
@@ -1794,7 +1797,7 @@ class Sudoku_main_work:
                                 if are_sync(self.sudoku_table[ru][cu], self.sudoku_table[rd][cu], self.sudoku_table[rd][cd]):
                                     if sorted(set(self.sudoku_table[ru][cu]) & set(self.sudoku_table[rd][cd]))[0] in self.sudoku_table[ru][cd]:
                                         self.sudoku_table[ru][cd].remove(int(sorted(set(self.sudoku_table[ru][cu]) & set(self.sudoku_table[rd][cd]))[0]))
-                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {sorted(set(self.sudoku_table[ru][cu]) & set(self.sudoku_table[rd][cd]))[0]} from list of p.n. in cell {self.letter_for_collumn(cd)}{ru+1} (due to y-winging)")
+                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {sorted(set(self.sudoku_table[ru][cu]) & set(self.sudoku_table[rd][cd]))[0]} from list of p.n. in cell {self.letter_for_column(cd)}{ru+1} (due to y-winging)")
                                         self.action += 1
                                         table_changed, self.ch_gl, self.moderate = True, True, True
                                         self.uses["Y-wings"] += 1
@@ -1802,7 +1805,7 @@ class Sudoku_main_work:
                                 if are_sync(self.sudoku_table[ru][cu], self.sudoku_table[rd][cu], self.sudoku_table[ru][cd]):
                                     if sorted(set(self.sudoku_table[ru][cd]) & set(self.sudoku_table[rd][cu]))[0] in self.sudoku_table[rd][cd]:
                                         self.sudoku_table[rd][cd].remove(int(sorted(set(self.sudoku_table[ru][cd]) & set(self.sudoku_table[rd][cu]))[0]))
-                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {sorted(set(self.sudoku_table[ru][cd]) & set(self.sudoku_table[rd][cu]))[0]} from list of p.n. in cell {self.letter_for_collumn(cd)}{rd+1} (due to y-winging)")
+                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {sorted(set(self.sudoku_table[ru][cd]) & set(self.sudoku_table[rd][cu]))[0]} from list of p.n. in cell {self.letter_for_column(cd)}{rd+1} (due to y-winging)")
                                         self.action += 1
                                         table_changed, self.ch_gl, self.moderate = True, True, True
                                         self.uses["Y-wings"] += 1
@@ -1810,7 +1813,7 @@ class Sudoku_main_work:
                                 if are_sync(self.sudoku_table[rd][cu], self.sudoku_table[ru][cd], self.sudoku_table[rd][cd]):
                                     if sorted(set(self.sudoku_table[ru][cd]) & set(self.sudoku_table[rd][cu]))[0] in self.sudoku_table[ru][cu]:
                                         self.sudoku_table[ru][cu].remove(int(sorted(set(self.sudoku_table[ru][cd]) & set(self.sudoku_table[rd][cu]))[0]))
-                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {sorted(set(self.sudoku_table[ru][cd]) & set(self.sudoku_table[rd][cu]))[0]} from list of p.n. in cell {self.letter_for_collumn(cu)}{ru+1} (due to y-winging)")
+                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {sorted(set(self.sudoku_table[ru][cd]) & set(self.sudoku_table[rd][cu]))[0]} from list of p.n. in cell {self.letter_for_column(cu)}{ru+1} (due to y-winging)")
                                         self.action += 1
                                         table_changed, self.ch_gl, self.moderate = True, True, True
                                         self.uses["Y-wings"] += 1
@@ -1818,31 +1821,31 @@ class Sudoku_main_work:
                                 if are_sync(self.sudoku_table[ru][cu], self.sudoku_table[ru][cd], self.sudoku_table[rd][cd]):
                                     if sorted(set(self.sudoku_table[ru][cu]) & set(self.sudoku_table[rd][cd]))[0] in self.sudoku_table[rd][cu]:
                                         self.sudoku_table[rd][cu].remove(int(sorted(set(self.sudoku_table[ru][cu]) & set(self.sudoku_table[rd][cd]))[0]))
-                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {sorted(set(self.sudoku_table[ru][cu]) & set(self.sudoku_table[rd][cd]))[0]} from list of p.n. in cell {self.letter_for_collumn(cu)}{rd+1} (due to y-winging)")
+                                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {sorted(set(self.sudoku_table[ru][cu]) & set(self.sudoku_table[rd][cd]))[0]} from list of p.n. in cell {self.letter_for_column(cu)}{rd+1} (due to y-winging)")
                                         self.action += 1
                                         table_changed, self.ch_gl, self.moderate = True, True, True
                                         self.uses["Y-wings"] += 1
 
-    def asign_cell_num(self, row, collumn, num, wd):
+    def asign_cell_num(self, row, column, num, wd):
         try:
-            self.sudoku_table[row][collumn] = int(num)
+            self.sudoku_table[row][column] = int(num)
             if self.called_by == "__call__":
-                self.enter_numbers_solving_mode[int((row*9)+collumn)].place_forget()
+                self.enter_numbers_solving_mode[int((row*9)+column)].place_forget()
                 temp_label = Label(tk, text = f"{num}", bg = "light grey", fg = "black", font=("Calibri", 30))
-                temp_label.place(x = 8 +(((row * 9) + collumn) - (((row * 9) + collumn)//9)*9)*55, y =  8 +(((row * 9) + collumn)//9)*55, width = 44, height = 44 )
-            self.list_of_changes_solving_mode.append(f"#{self.action} - Asigned {num} to {self.letter_for_collumn(collumn)}{row+1} {wd}")
+                temp_label.place(x = 8 +(((row * 9) + column) - (((row * 9) + column)//9)*9)*55, y =  8 +(((row * 9) + column)//9)*55, width = 44, height = 44 )
+            self.list_of_changes_solving_mode.append(f"#{self.action} - Asigned {num} to {self.letter_for_column(column)}{row+1} {wd}")
             self.action += 1
-            self.clicka_num_remove(row, collumn, num, ["r", "c", "b"])
+            self.clicka_num_remove(row, column, num, ["r", "c", "b"])
         except:
             print("Error")
 
-    def clicka_num_remove(self, row, collumn, num, wd):
+    def clicka_num_remove(self, row, column, num, wd):
         if "c" in wd:
             for k in range(0, 9):
-                if str(type(self.sudoku_table[k][collumn]))=="<class 'list'>":
+                if str(type(self.sudoku_table[k][column]))=="<class 'list'>":
                     try:
-                        self.sudoku_table[k][collumn].remove(int(num))
-                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {num} from list of possible numbers in cell {self.letter_for_collumn(collumn)}{k+1} (in collumn with {self.letter_for_collumn(collumn)}{row+1})")
+                        self.sudoku_table[k][column].remove(int(num))
+                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {num} from list of possible numbers in cell {self.letter_for_column(column)}{k+1} (in column with {self.letter_for_column(column)}{row+1})")
                         self.action += 1
                     except:
                         pass
@@ -1851,18 +1854,18 @@ class Sudoku_main_work:
                 if str(type(self.sudoku_table[row][n]))=="<class 'list'>":
                     try:
                         self.sudoku_table[row][n].remove(int(num))
-                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {num} from list of possible numbers in cell {self.letter_for_collumn(n)}{row+1} (in row with {self.letter_for_collumn(collumn)}{row+1})")
+                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {num} from list of possible numbers in cell {self.letter_for_column(n)}{row+1} (in row with {self.letter_for_column(column)}{row+1})")
                         self.action += 1
                     except:
                         pass
         if "b" in wd:
-            block_row = ((row*9 + collumn)//27)*3
-            block_collumn = (((row*9 + collumn)%9)//3)*3
+            block_row = ((row*9 + column)//27)*3
+            block_column = (((row*9 + column)%9)//3)*3
             for l in range(0, 9):
-                if str(type(self.sudoku_table[block_row+(l//3)][block_collumn+(l%3)]))=="<class 'list'>":
+                if str(type(self.sudoku_table[block_row+(l//3)][block_column+(l%3)]))=="<class 'list'>":
                     try:
-                        self.sudoku_table[block_row+(l//3)][block_collumn+(l%3)].remove(int(num))
-                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {num} from list of possible numbers in cell {self.letter_for_collumn(block_collumn+(l%3))}{block_row+(l//3)+1} (in block with {self.letter_for_collumn(collumn)}{row+1})")
+                        self.sudoku_table[block_row+(l//3)][block_column+(l%3)].remove(int(num))
+                        self.list_of_changes_solving_mode.append(f"#{self.action} --- Deleted {num} from list of possible numbers in cell {self.letter_for_column(block_column+(l%3))}{block_row+(l//3)+1} (in block with {self.letter_for_column(column)}{row+1})")
                         self.action += 1
                     except:
                         pass
@@ -2084,7 +2087,7 @@ class Sudoku_main_work:
                 return False
         return lst
 
-    def letter_for_collumn(self, coll):
+    def letter_for_column(self, coll):
         if coll == 0:
             return "A"
         elif coll == 1:
